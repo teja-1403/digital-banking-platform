@@ -3,8 +3,8 @@ package com.digitalbanking.gateway.config;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.CorsFilter;
 
 import java.util.List;
 
@@ -12,9 +12,10 @@ import java.util.List;
 public class CorsConfig {
 
     @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
+    public CorsFilter corsFilter() {
 
-        CorsConfiguration configuration = new CorsConfiguration();
+        CorsConfiguration configuration =
+                new CorsConfiguration();
 
         // React development server
         configuration.setAllowedOrigins(
@@ -35,7 +36,8 @@ public class CorsConfig {
         configuration.setAllowedHeaders(
                 List.of(
                         "Authorization",
-                        "Content-Type"
+                        "Content-Type",
+                        "Idempotency-Key"
                 )
         );
 
@@ -46,8 +48,11 @@ public class CorsConfig {
         UrlBasedCorsConfigurationSource source =
                 new UrlBasedCorsConfigurationSource();
 
-        source.registerCorsConfiguration("/**", configuration);
+        source.registerCorsConfiguration(
+                "/**",
+                configuration
+        );
 
-        return source;
+        return new CorsFilter(source);
     }
 }

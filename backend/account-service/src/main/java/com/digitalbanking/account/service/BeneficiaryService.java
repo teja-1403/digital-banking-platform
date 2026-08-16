@@ -174,8 +174,26 @@ public class BeneficiaryService {
             Beneficiary beneficiary
     ) {
 
+        /*
+         * Beneficiary stores the account number rather than
+         * a JPA relationship to Account.
+         *
+         * Resolve the actual Account so the response can expose
+         * the Account Service's real account ID.
+         */
+        Account beneficiaryAccount = accountRepository
+                .findByAccountNumber(
+                        beneficiary.getBeneficiaryAccountNumber()
+                )
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Beneficiary account not found"
+                        )
+                );
+
         return new BeneficiaryResponse(
                 beneficiary.getId(),
+                beneficiaryAccount.getId(),
                 beneficiary.getBeneficiaryAccountNumber(),
                 beneficiary.getNickname(),
                 beneficiary.getCreatedAt()
