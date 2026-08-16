@@ -59,4 +59,16 @@ public class GatewayRoutesConfig {
                 .before(uri("http://localhost:8082"))
                 .build();
     }
+
+    @Bean
+    public RouterFunction<ServerResponse> transactionServiceRoute() {
+        return route("transaction-service")
+                .GET("/api/transactions/**", http())
+                .POST("/api/transactions/**", http())
+                .PUT("/api/transactions/**", http())
+                .PATCH("/api/transactions/**", http())
+                .DELETE("/api/transactions/**", http())
+                .before(uri("http://localhost:8083"))
+                .build();
+    }
 }

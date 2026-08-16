@@ -1,4 +1,4 @@
-package com.digitalbanking.account.config;
+package com.digitalbanking.transaction.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -27,7 +27,6 @@ public class SecurityConfig {
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**"
                         ).permitAll()
-                        .requestMatchers("/internal/**").permitAll()
                         .anyRequest().authenticated()
                 )
 
@@ -54,7 +53,9 @@ public class SecurityConfig {
         JwtAuthenticationConverter converter =
                 new JwtAuthenticationConverter();
 
-        converter.setJwtGrantedAuthoritiesConverter(authoritiesConverter);
+        converter.setJwtGrantedAuthoritiesConverter(
+                authoritiesConverter
+        );
 
         return converter;
     }
