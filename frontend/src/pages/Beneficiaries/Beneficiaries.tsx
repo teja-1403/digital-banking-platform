@@ -26,6 +26,7 @@ import {
 } from "../../api/beneficiaryApi";
 
 import type { Beneficiary } from "../../types/beneficiary";
+import { getApiErrorMessage } from "../../utils/apiError";
 
 export default function Beneficiaries() {
   const [beneficiaries, setBeneficiaries] = useState<Beneficiary[]>([]);
@@ -45,6 +46,8 @@ export default function Beneficiaries() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [deletingId, setDeletingId] = useState<number | null>(null);
+
+  const [deleteTarget, setDeleteTarget] = useState<Beneficiary | null>(null);
 
   const loadBeneficiaries = async () => {
     setIsLoading(true);
@@ -104,11 +107,8 @@ export default function Beneficiaries() {
       setBeneficiaries((current) => [...current, beneficiary]);
 
       handleCloseDialog();
-    } catch (err: any) {
-      const message =
-        err?.response?.data?.message || "Unable to add beneficiary.";
-
-      setFormError(message);
+    } catch (error) {
+      setFormError(getApiErrorMessage(error, "Unable to add beneficiary."));
     } finally {
       setIsSubmitting(false);
     }
@@ -116,15 +116,6 @@ export default function Beneficiaries() {
 
   const handleDelete = async (beneficiaryId: number) => {
     setError("");
-
-    const confirmed = window.confirm(
-      "Are you sure you want to delete this beneficiary?",
-    );
-
-    if (!confirmed) {
-      return;
-    }
-
     setDeletingId(beneficiaryId);
 
     try {
@@ -133,8 +124,10 @@ export default function Beneficiaries() {
       setBeneficiaries((current) =>
         current.filter((beneficiary) => beneficiary.id !== beneficiaryId),
       );
-    } catch (err: any) {
-      setError(err?.response?.data?.message || "Unable to delete beneficiary.");
+
+      setDeleteTarget(null);
+    } catch (error) {
+      setFormError(getApiErrorMessage(error, "Unable to delete beneficiary."));
     } finally {
       setDeletingId(null);
     }
@@ -238,7 +231,7 @@ export default function Beneficiaries() {
                   <IconButton
                     color="error"
                     disabled={deletingId === beneficiary.id}
-                    onClick={() => void handleDelete(beneficiary.id)}
+                    onClick={() => setDeleteTarget(beneficiary)}
                   >
                     <DeleteIcon />
                   </IconButton>
@@ -312,6 +305,39 @@ export default function Beneficiaries() {
             disabled={isSubmitting}
           >
             {isSubmitting ? "Adding..." : "Add Beneficiary"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <Dialog
+        open={Boolean(deleteTarget)}
+        onClose={() => !deletingId && setDeleteTarget(null)}
+        fullWidth
+        maxWidth="xs"
+      >
+        <DialogTitle>Delete Beneficiary?</DialogTitle>
+
+        <DialogContent>
+          <Typography>
+            Are you sure you want to remove{" "}
+            <strong>{deleteTarget?.nickname}</strong> from your beneficiaries?
+          </Typography>
+        </DialogContent>
+
+        <DialogActions>
+          <Button
+            onClick={() => setDeleteTarget(null)}
+            disabled={deletingId !== null}
+          >
+            Cancel
+          </Button>
+
+          <Button
+            color="error"
+            variant="contained"
+            onClick={() => deleteTarget && void handleDelete(deleteTarget.id)}
+            disabled={deletingId !== null}
+          >
+            {deletingId !== null ? "Deleting..." : "Delete"}
           </Button>
         </DialogActions>
       </Dialog>

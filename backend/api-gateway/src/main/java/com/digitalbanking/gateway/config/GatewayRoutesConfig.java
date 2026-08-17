@@ -71,4 +71,30 @@ public class GatewayRoutesConfig {
                 .before(uri("http://localhost:8083"))
                 .build();
     }
+
+    @Bean
+    public RouterFunction<ServerResponse> adminUserRoute() {
+        return route("admin-user-stats")
+                .GET("/api/admin/user-stats", http())
+                .before(uri("http://localhost:8081"))
+                .build();
+    }
+
+    @Bean
+    public RouterFunction<ServerResponse> adminAccountRoute() {
+        return route("admin-account-stats")
+                .GET("/api/admin/account-stats", http())
+                .before(uri("http://localhost:8082"))
+                .build();
+    }
+
+    @Bean
+    public RouterFunction<ServerResponse> adminTransactionRoute() {
+        return route("admin-transaction-stats")
+                .GET("/api/admin/transaction-stats", http())
+                .before(uri("http://localhost:8083"))
+                .build();
+    }
+
+
 }

@@ -28,6 +28,7 @@ import type { Account } from "../../types/account";
 import type { Customer } from "../../types/customer";
 
 import CustomerProfileDialog from "./CustomerProfileDialog";
+import { getApiErrorMessage } from "../../utils/apiError";
 
 export default function Accounts() {
   const [accounts, setAccounts] = useState<Account[]>([]);
@@ -93,8 +94,10 @@ export default function Accounts() {
       setAccounts((current) => [...current, createdAccount]);
 
       setAccountDialogOpen(false);
-    } catch {
-      setAccountError("Unable to create the account.");
+    } catch (error) {
+      setAccountError(
+        getApiErrorMessage(error, "Unable to create the account."),
+      );
     } finally {
       setIsCreatingAccount(false);
     }

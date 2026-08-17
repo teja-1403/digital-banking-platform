@@ -24,6 +24,7 @@ import { createTransfer } from "../../api/transactionApi";
 import type { Account } from "../../types/account";
 import type { Beneficiary } from "../../types/beneficiary";
 import type { TransactionResponse } from "../../types/transaction";
+import { getApiErrorMessage } from "../../utils/apiError";
 
 export default function Transfer() {
   const [accounts, setAccounts] = useState<Account[]>([]);
@@ -93,13 +94,6 @@ export default function Transfer() {
       ),
     [beneficiaries, beneficiaryId],
   );
-
-  const resetForm = () => {
-    setAmount("");
-    setDescription("");
-    setBeneficiaryId("");
-    setTransaction(null);
-  };
 
   const handleTransfer = async () => {
     setError("");
@@ -173,14 +167,15 @@ export default function Transfer() {
 
       if (response.status === "COMPLETED") {
         setSuccess(true);
+
+        setAmount("");
+        setDescription("");
+        setBeneficiaryId("");
       } else {
         setError("The transfer was not completed.");
       }
-    } catch (err: any) {
-      const message =
-        err?.response?.data?.message || "Transfer failed. Please try again.";
-
-      setError(message);
+    } catch (error) {
+      setError(getApiErrorMessage(error, "Transfer failed. Please try again."));
     } finally {
       setIsSubmitting(false);
     }
