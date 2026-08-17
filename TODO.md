@@ -1,19 +1,38 @@
 # Digital Banking Platform — TODO
 
-> A secure, modular retail-banking platform built to demonstrate end-to-end full-stack engineering, backend design, security, transaction processing, testing, and practical microservice architecture.
+> A secure, modular retail-banking platform demonstrating end-to-end full-stack engineering, microservice architecture, JWT security, transaction processing, idempotency, concurrency handling, auditability, React/TypeScript development, analytics, and automated testing.
 
 ---
 
-## 0. Project Definition
+# 0. Project Status
 
-### Project Name
+## Current Overall State
+
+```text
+Phase 1 — Authentication & Security       ✅ Complete
+Phase 2 — Account Management              ✅ Complete
+Phase 3 — Transaction Engine              ✅ Complete
+Phase 4 — Frontend Integration            ✅ Complete
+Phase 5 — Docker / Deployment / Final Docs ⏳ Remaining / Optional
+```
+
+The core application is complete and the Phase 4 frontend branch has been pushed and raised as a PR to `develop`.
+
+---
+
+# 1. Project Definition
+
+## Project Name
+
 **Digital Banking Platform**
 
-### One-Line Description
-A secure digital banking platform where customers can manage bank accounts, transfer money, track transactions, and analyze financial activity, while administrators can monitor users, accounts, transactions, and audit events.
+## One-Line Description
 
-### Primary Goal
-Build a realistic but manageable banking application that demonstrates:
+A secure digital banking platform where customers can register, manage customer profiles and bank accounts, manage beneficiaries, transfer money, view transaction history, analyze financial activity, while administrators can monitor platform-wide statistics.
+
+## Primary Goal
+
+Demonstrate:
 
 - Java + Spring Boot backend development
 - React + TypeScript frontend development
@@ -21,1113 +40,821 @@ Build a realistic but manageable banking application that demonstrates:
 - Role-based access control
 - RESTful API design
 - Microservice architecture
-- PostgreSQL database design
-- Transaction processing and consistency
-- Idempotent financial operations
+- PostgreSQL database-per-service ownership
+- Financial transaction processing
+- Idempotent operations
+- Concurrency-safe balance updates
 - Audit logging
 - Data visualization
-- Automated testing
-- Dockerized local setup
-- API documentation
+- Automated backend and frontend testing
+- API Gateway integration
+- Swagger/OpenAPI documentation
 
-### Project Philosophy
+## Project Philosophy
 
-Focus more on:
+Focus on:
 
-- Business logic
 - Correctness
+- Business logic
 - Security
 - API design
 - Transaction consistency
 - Error handling
 - Testing
-- Architecture
+- Clear service boundaries
 
-Focus less on:
+Avoid:
 
-- Complex visual design
-- Animations
-- UI polish
 - Unnecessary technologies
 - Overengineering
+- Complex visual effects
+- Technology for technology's sake
 
-> **Principle:** Build a small banking system whose important functionality can be explained deeply instead of a large system with shallow features.
+> **Principle:** Build a banking system whose important functionality can be explained deeply instead of a large system with shallow features.
 
 ---
 
-# 1. Technology Stack
+# 2. Technology Stack
 
 ## Backend
 
-- [ ] Java 21
-- [ ] Spring Boot
-- [ ] Spring Security
-- [ ] JWT
-- [ ] Spring Data JPA
-- [ ] Hibernate
-- [ ] Spring Cloud Gateway
-- [ ] RESTful APIs
-- [ ] Bean Validation
-- [ ] Maven
-- [ ] Lombok
+- [x] Java 21
+- [x] Spring Boot
+- [x] Spring Security
+- [x] JWT
+- [x] Spring Security OAuth2 Resource Server
+- [x] Spring Data JPA
+- [x] Hibernate
+- [x] Spring Cloud Gateway
+- [x] RESTful APIs
+- [x] Bean Validation
+- [x] Maven
+- [x] RestClient for service-to-service communication
 
 ## Frontend
 
-- [ ] React
-- [ ] TypeScript
-- [ ] Axios
-- [ ] React Router
-- [ ] Chart.js
+- [x] React
+- [x] TypeScript
+- [x] Vite
+- [x] Axios
+- [x] React Router
+- [x] Material UI (MUI)
+- [x] Recharts
+- [x] Responsive application layout
 
 ## Database
 
-- [ ] PostgreSQL
-- [ ] pgAdmin
+- [x] PostgreSQL
+- [x] pgAdmin
+
+Logical databases:
+
+```text
+auth_db
+account_db
+transaction_db
+```
 
 ## Testing
 
-- [ ] JUnit 5
-- [ ] Mockito
-- [ ] Spring Boot Test
+- [x] JUnit 5
+- [x] Mockito
+- [x] Spring Boot Test
+- [x] Postman for API validation
+- [x] Vitest
+- [x] React Testing Library
+- [x] @testing-library/user-event
 - [ ] Testcontainers
-- [ ] Jest
-- [ ] React Testing Library
-- [ ] Postman for API validation
 
 ## DevOps / Tooling
 
-- [ ] Git
-- [ ] GitHub
+- [x] Git
+- [x] GitHub
+- [x] Feature branches
+- [x] Pull requests
+- [x] Environment variable configuration
 - [ ] Docker
 - [ ] Docker Compose
-- [ ] GitHub Actions (optional after the core project works)
+- [ ] GitHub Actions
 
 ## Documentation
 
-- [ ] Swagger / OpenAPI
-- [ ] README.md
-- [ ] Architecture diagram
-- [ ] API documentation
-- [ ] Setup instructions
+- [x] Swagger / OpenAPI
+- [x] README
+- [ ] Final architecture diagram
+- [x] Postman/API validation documentation
+- [ ] Final setup/deployment documentation
 
 ---
 
-# 2. High-Level Use Case
-
-## Customer
-
-A customer can:
-
-- [ ] Register
-- [ ] Log in securely
-- [ ] Log out
-- [ ] Refresh authentication
-- [ ] View profile
-- [ ] View bank accounts
-- [ ] View account balance
-- [ ] View account status
-- [ ] Manage beneficiaries
-- [ ] Transfer money
-- [ ] View transaction history
-- [ ] Search and filter transactions
-- [ ] Analyze debit/credit activity
-- [ ] View transaction status
-- [ ] View recent account activity
-
-## Administrator
-
-An administrator can:
-
-- [ ] View customers
-- [ ] View accounts
-- [ ] Search accounts/users
-- [ ] Activate/deactivate accounts
-- [ ] View transactions
-- [ ] Filter failed transactions
-- [ ] Monitor transaction status
-- [ ] View audit logs
-- [ ] View high-level banking statistics
-
----
-
-# 3. High-Level Architecture
+# 3. Current Architecture
 
 ```text
-                    React + TypeScript
-                           |
-                           v
-                 Spring Cloud Gateway
-                           |
-          +----------------+----------------+
-          |                |                |
-          v                v                v
-     Auth Service     Account Service   Transaction Service
-          |                |                |
-          v                v                v
-       Auth DB         Account DB       Transaction DB
+                         React + TypeScript
+                              :5173
+                                |
+                                v
+                         API Gateway
+                              :8080
+                                |
+             +------------------+------------------+
+             |                  |                  |
+             v                  v                  v
+       Auth Service       Account Service     Transaction Service
+           :8081              :8082                :8083
+             |                  |                    |
+             v                  v                    v
+          auth_db           account_db         transaction_db
+                                                 |
+                                                 v
+                                             audit_logs
 ```
 
 ## Service Responsibilities
 
 ### Auth Service
 
-Responsible for:
+- [x] User registration
+- [x] Password hashing with BCrypt
+- [x] Login
+- [x] JWT access tokens
+- [x] Refresh tokens
+- [x] Logout / refresh-token revocation
+- [x] JWT Resource Server validation
+- [x] `ROLE_USER`
+- [x] `ROLE_ADMIN`
+- [x] `/api/auth/me`
+- [x] Admin statistics API
+- [x] Authentication/authorization error handling
+- [x] Swagger/OpenAPI
 
-- [ ] User registration
-- [ ] Login
-- [ ] Password hashing
-- [ ] JWT generation
-- [ ] JWT validation
-- [ ] Refresh tokens
-- [ ] Logout
-- [ ] Roles
-- [ ] Authentication-related logic
+### Account Service
 
-Roles:
+- [x] Customer profile
+- [x] Bank account creation
+- [x] Savings accounts
+- [x] Current accounts
+- [x] Account status
+- [x] Balance ownership
+- [x] Account ownership enforcement
+- [x] Beneficiary management
+- [x] Internal transfer endpoint
+- [x] Internal service-secret protection
+- [x] Admin account statistics API
+- [x] JWT Resource Server validation
+- [x] Swagger/OpenAPI
+- [x] Service-layer automated tests
+
+### Transaction Service
+
+- [x] Transfer initiation
+- [x] Transaction references
+- [x] PENDING / COMPLETED / FAILED lifecycle
+- [x] Account Service integration
+- [x] Internal service authentication
+- [x] Idempotency
+- [x] Concurrent-request protection
+- [x] Transaction history
+- [x] Audit logging
+- [x] Business vs infrastructure error handling
+- [x] Admin transaction statistics API
+- [x] JWT Resource Server validation
+- [x] Swagger/OpenAPI
+- [x] Automated service tests
+
+### API Gateway
+
+- [x] Single entry point for frontend
+- [x] Auth routing
+- [x] Account/customer/beneficiary routing
+- [x] Transaction routing
+- [x] Admin routing
+- [x] CORS configuration
+- [x] Browser preflight handling
+
+---
+
+# 4. Core Architecture Principles
+
+- [x] Each service owns its own data
+- [x] No direct cross-service database access
+- [x] Services communicate through APIs
+- [x] Frontend communicates through API Gateway
+- [x] DTOs are used instead of exposing entities directly
+- [x] Business logic resides in services
+- [x] API validation is enforced at boundaries
+- [x] Ownership checks are enforced server-side
+- [x] Service-to-service endpoints use an internal secret
+- [x] Financial transfers are idempotent
+- [x] Balance updates are concurrency-safe
+- [x] Audit events are persisted
+
+---
+
+# PHASE 1 — AUTHENTICATION & SECURITY ✅
+
+## 1.1 Authentication
+
+- [x] Registration
+- [x] Login
+- [x] BCrypt password hashing
+- [x] JWT access token
+- [x] Refresh token
+- [x] Logout
+- [x] Refresh-token revocation
+- [x] JWT validation
+- [x] Role-based authorization
+- [x] Protected endpoints
+- [x] `/api/auth/me`
+- [x] Authentication error handling
+- [x] Authorization error handling
+
+### Implemented APIs
+
+```text
+POST /api/auth/register
+POST /api/auth/login
+POST /api/auth/refresh
+POST /api/auth/logout
+GET  /api/auth/me
+```
+
+## 1.2 Roles
 
 ```text
 ROLE_USER
 ROLE_ADMIN
 ```
 
-### Account Service
+## 1.3 Security Validation
 
-Responsible for:
+- [x] Request without token → 401
+- [x] Invalid JWT → 401
+- [x] Valid JWT → protected resource access
+- [x] User-only access
+- [x] Admin-only access
+- [x] Fresh JWT required after role changes
 
-- [ ] Customer profile
-- [ ] Bank accounts
-- [ ] Account status
-- [ ] Balance
-- [ ] Beneficiaries
-- [ ] Account-related business rules
+## 1.4 Swagger
 
-### Transaction Service
-
-Responsible for:
-
-- [ ] Transfers
-- [ ] Debit transactions
-- [ ] Credit transactions
-- [ ] Transaction status
-- [ ] Balance validation
-- [ ] Transaction references
-- [ ] Idempotency
-- [ ] Failure handling
-- [ ] Transaction history
-- [ ] Audit-related transaction events
-
-### API Gateway
-
-Responsible for:
-
-- [ ] Single entry point for frontend
-- [ ] Request routing
-- [ ] Common API concerns
-- [ ] Security-related gateway configuration
-- [ ] Service endpoint abstraction
-
----
-
-# 4. Core Architecture Principles
-
-- [ ] Each service owns its own data
-- [ ] Do not allow direct cross-service database access
-- [ ] Services communicate through APIs
-- [ ] Frontend communicates through the API Gateway
-- [ ] Use DTOs instead of exposing entities directly
-- [ ] Centralize exception handling where appropriate
-- [ ] Validate inputs at API boundaries
-- [ ] Use consistent HTTP status codes
-- [ ] Use clear error responses
-- [ ] Keep business logic inside services, not controllers
-- [ ] Keep transaction processing explicit and testable
-
-> The system may use one PostgreSQL server/container for local development, while logically maintaining separate databases/schema ownership for each service.
-
----
-
-# PHASE 1 — FOUNDATION, DESIGN & AUTHENTICATION
-
-## 1.1 Requirements & Scope
-
-- [ ] Finalize project use case
-- [ ] Define customer workflows
-- [ ] Define admin workflows
-- [ ] Identify authentication requirements
-- [ ] Identify account rules
-- [ ] Identify transaction rules
-- [ ] Identify audit requirements
-- [ ] Define core MVP
-- [ ] Separate optional/advanced features from MVP
-
-### MVP Core
-
-- [ ] Authentication
-- [ ] JWT
-- [ ] User/Admin roles
-- [ ] Account management
-- [ ] Beneficiaries
-- [ ] Internal money transfer
-- [ ] Transaction history
-- [ ] Basic dashboard
-- [ ] Basic analytics
-- [ ] Admin monitoring
-- [ ] Audit logging
-- [ ] Backend tests
-- [ ] Frontend tests
-- [ ] Docker Compose
-- [ ] Swagger/OpenAPI
-
----
-
-## 1.2 Define Main Entities
-
-### Auth DB
-
-```text
-users
-roles
-refresh_tokens
-```
-
-### Account DB
-
-```text
-customers
-accounts
-beneficiaries
-```
-
-### Transaction DB
-
-```text
-transactions
-transaction_events
-idempotency_keys
-audit_logs
-```
-
----
-
-## 1.3 Core Transaction Model
-
-Transaction fields should include at least:
-
-```text
-transactionId
-referenceNumber
-senderAccount
-receiverAccount
-amount
-transactionType
-status
-description
-createdAt
-completedAt
-failureReason
-```
-
-Suggested transaction types:
-
-```text
-DEBIT
-CREDIT
-TRANSFER
-```
-
-Suggested statuses:
-
-```text
-INITIATED
-PROCESSING
-COMPLETED
-FAILED
-```
-
----
-
-## 1.4 Authentication
-
-Implement:
-
-- [ ] Registration
-- [ ] Login
-- [ ] Password hashing
-- [ ] JWT access token
-- [ ] Refresh token
-- [ ] Logout
-- [ ] JWT validation
-- [ ] Role-based authorization
-- [ ] Protected endpoints
-- [ ] Authentication error handling
-- [ ] Authorization error handling
-
-### Initial API Endpoints
-
-```text
-POST /auth/register
-POST /auth/login
-POST /auth/refresh
-POST /auth/logout
-```
-
-### Security Rules
-
-- [ ] Never store plain-text passwords
-- [ ] Protect private APIs with JWT
-- [ ] Validate JWT before protected operations
-- [ ] Restrict ADMIN endpoints to ADMIN users
-- [ ] Restrict USER resources to resource owners
-- [ ] Do not expose sensitive user information unnecessarily
-
----
-
-## 1.5 Foundation Deliverables
-
-- [ ] Git repository initialized
-- [ ] README skeleton
-- [ ] Backend multi-module/service structure
-- [ ] React application created
-- [ ] PostgreSQL configured
-- [ ] Docker Compose skeleton
-- [ ] Environment configuration strategy
-- [ ] Initial architecture diagram
-- [ ] Initial database design
-- [ ] Initial API documentation structure
+- [x] Swagger UI
+- [x] OpenAPI specification
+- [x] Bearer JWT Authorize button
+- [x] Swagger endpoints permitted in security configuration
 
 ### Phase 1 Exit Criteria
 
-- [ ] User can register
-- [ ] User can log in
-- [ ] JWT is issued and validated
-- [ ] Protected endpoint works
-- [ ] USER/ADMIN access rules work
-- [ ] Project can run locally
+- [x] User can register
+- [x] User can log in
+- [x] JWT is issued and validated
+- [x] Refresh flow works
+- [x] Logout/revocation works
+- [x] USER/ADMIN access rules work
+- [x] Auth endpoints documented
 
 ---
 
-# PHASE 2 — ACCOUNT MANAGEMENT & CORE BANKING OPERATIONS
+# PHASE 2 — ACCOUNT MANAGEMENT ✅
 
 ## 2.1 Customer Profile
 
-- [ ] View profile
-- [ ] Update profile where appropriate
-- [ ] Securely retrieve current user's data
+- [x] Create customer profile
+- [x] View current customer
+- [x] Ownership enforced through authenticated user ID
 
----
+APIs:
+
+```text
+POST /api/customers
+GET  /api/customers/me
+```
 
 ## 2.2 Account Management
 
-Implement:
-
-- [ ] Create account
-- [ ] View all accounts
-- [ ] View account details
-- [ ] View account balance
-- [ ] View account status
-- [ ] Activate/deactivate account where allowed
-- [ ] Enforce ownership rules
-
-### Suggested Account States
-
-```text
-ACTIVE
-INACTIVE
-BLOCKED
-CLOSED
-```
-
-### Account Rules
-
-- [ ] Only valid users can access accounts
-- [ ] Only account owners can access customer account data
-- [ ] Inactive/blocked accounts cannot initiate transfers
-- [ ] Closed accounts cannot transact
-- [ ] Balance must not become negative
-
----
+- [x] Create account
+- [x] View accounts
+- [x] View account details
+- [x] View balance
+- [x] View status
+- [x] Savings account
+- [x] Current account
+- [x] Ownership enforcement
+- [x] Prevent unauthorized access
+- [x] Prevent invalid account use in transfers
 
 ## 2.3 Beneficiary Management
 
-Implement:
+- [x] Add beneficiary
+- [x] View beneficiaries
+- [x] View beneficiary
+- [x] Delete beneficiary
+- [x] Validate beneficiary account
+- [x] Prevent duplicate beneficiary
+- [x] Prevent adding own account
+- [x] Prevent inactive beneficiary account
+- [x] Expose actual beneficiary account ID to frontend
 
-- [ ] Add beneficiary
-- [ ] View beneficiaries
-- [ ] Delete beneficiary
-- [ ] Validate beneficiary account
-- [ ] Prevent invalid/duplicate beneficiary relationships
-
-### Example APIs
-
-```text
-GET    /beneficiaries
-POST   /beneficiaries
-DELETE /beneficiaries/{id}
-```
-
----
-
-## 2.4 Suggested Account APIs
+APIs:
 
 ```text
-GET    /accounts
-GET    /accounts/{id}
-POST   /accounts
-PATCH  /accounts/{id}/status
+GET    /api/beneficiaries
+POST   /api/beneficiaries
+GET    /api/beneficiaries/{id}
+DELETE /api/beneficiaries/{id}
 ```
 
----
+## 2.4 Account Security
 
-## 2.5 React Foundation
+- [x] JWT Resource Server
+- [x] User-to-account ownership enforcement
+- [x] Internal Account Service endpoint
+- [x] Internal service-secret protection
 
-Implement a simple functional UI:
+## 2.5 Account Service Testing
 
-- [ ] Login page
-- [ ] Registration page
-- [ ] Protected routes
-- [ ] Customer dashboard
-- [ ] Account summary
-- [ ] Account details
-- [ ] Beneficiary page
-- [ ] Logout
-- [ ] Basic navigation
-- [ ] Loading states
-- [ ] Error states
+- [x] Customer service tests
+- [x] Account service tests
+- [x] Beneficiary service tests
+- [x] Spring context test
+- [x] Maven test/build validation
 
-### UI Principle
+## 2.6 Account UI
 
-Keep the design simple and readable.
+- [x] Accounts page
+- [x] Customer profile creation UI
+- [x] Savings creation UI
+- [x] Current account creation UI
+- [x] Account summary
+- [x] Account balance display
+- [x] Account status display
+- [x] Loading/error/empty states
 
-Do not spend significant development time on:
+### Phase 2 Exit Criteria
 
-- animations
-- visual effects
-- complex design systems
-- advanced responsive layouts
-
-Prioritize functionality.
-
----
-
-## 2.6 Phase 2 Exit Criteria
-
-- [ ] Customer can log in
-- [ ] Customer can view their accounts
-- [ ] Customer can view balance
-- [ ] Customer can manage beneficiaries
-- [ ] Ownership restrictions work
-- [ ] React consumes backend APIs successfully
-- [ ] Protected frontend routes work
+- [x] Customer profile works
+- [x] Customers can create/view accounts
+- [x] Account ownership works
+- [x] Beneficiaries work
+- [x] Account APIs work through Gateway
+- [x] Account Swagger available
+- [x] Account automated service tests pass
 
 ---
 
-# PHASE 3 — TRANSACTION ENGINE, SECURITY & AUDITABILITY
+# PHASE 3 — TRANSACTION ENGINE ✅
 
-> **This is the most important phase of the project. Spend the most engineering effort here.**
+> **Most important engineering phase.**
 
 ## 3.1 Money Transfer
 
-Implement:
+- [x] Account-to-account transfer
+- [x] Source account validation
+- [x] Destination account validation
+- [x] Account status validation
+- [x] Sender != receiver validation
+- [x] Amount > 0 validation
+- [x] Two-decimal amount validation
+- [x] Sufficient-balance validation
+- [x] Transaction reference generation
+- [x] PENDING state
+- [x] COMPLETED state
+- [x] FAILED state
+- [x] Completion timestamp
+- [x] Balance debit/credit
 
-- [ ] Internal account-to-account transfer
-- [ ] Validate sender account
-- [ ] Validate receiver account
-- [ ] Validate account status
-- [ ] Validate sender != receiver
-- [ ] Validate amount > 0
-- [ ] Validate sufficient balance
-- [ ] Create transaction reference
-- [ ] Store timestamp
-- [ ] Update debit/credit records
-- [ ] Store transaction status
-- [ ] Return transaction result
-
-### Example API
-
-```text
-POST /transactions/transfer
-```
-
-Example conceptual request:
-
-```json
-{
-  "senderAccountId": "...",
-  "receiverAccountId": "...",
-  "amount": 5000,
-  "description": "Monthly transfer"
-}
-```
-
----
-
-## 3.2 Transaction Lifecycle
-
-Implement a traceable lifecycle:
+API:
 
 ```text
-INITIATED
-    |
-    v
-PROCESSING
-    |
-    +-------> FAILED
-    |
-    v
-COMPLETED
+POST /api/transactions/transfers
 ```
 
-Store:
+## 3.2 Idempotency
 
-- [ ] Current status
-- [ ] Created timestamp
-- [ ] Completion timestamp
-- [ ] Failure reason
-- [ ] Reference number
+- [x] `Idempotency-Key` header
+- [x] Unique database constraint
+- [x] Fast-path existing transaction lookup
+- [x] Concurrent duplicate protection
+- [x] Existing result returned for repeated requests
 
----
-
-## 3.3 Transaction Rules
-
-- [ ] Sender account must exist
-- [ ] Receiver account must exist
-- [ ] Sender and receiver cannot be identical
-- [ ] Sender must be ACTIVE
-- [ ] Receiver must be ACTIVE
-- [ ] Transfer amount must be positive
-- [ ] Sender must have sufficient balance
-- [ ] Failed transaction must be traceable
-- [ ] Completed transaction must have a reference
-- [ ] Transaction history should not be freely editable
-
----
-
-## 3.4 Idempotency
-
-Implement an idempotency mechanism for transfer requests.
-
-Example:
-
-```text
-Idempotency-Key: abc123
-```
-
-Expected behavior:
+Expected:
 
 ```text
 Request 1 -> transfer executed
 Request 2 -> existing transaction returned
 ```
 
-### Requirements
+## 3.3 Concurrency & Consistency
 
-- [ ] Store idempotency key
-- [ ] Associate it with the resulting transaction
-- [ ] Prevent duplicate transfer execution
-- [ ] Return previously created result for repeated request
+- [x] Database transaction boundaries
+- [x] Pessimistic locking for balance updates
+- [x] Concurrent transfer protection
+- [x] Balance consistency
+- [x] Failure handling
+- [x] Idempotency race handling
 
-> Interview concept: Preventing duplicate financial operations when the client retries a request due to timeout/network failure.
+## 3.4 Transaction History
 
----
+- [x] Account history
+- [x] Ownership enforcement
+- [x] Sender sees transactions
+- [x] Receiver sees transactions
+- [x] Newest-first sorting
 
-## 3.5 Concurrency & Consistency
-
-Handle cases such as:
+API:
 
 ```text
-Initial balance = ₹10,000
-
-Transfer A = ₹8,000
-Transfer B = ₹7,000
+GET /api/transactions/account/{accountId}
 ```
 
-The system must not allow both transfers simply because both requests read the same starting balance.
+Not currently implemented:
 
-Investigate and implement appropriate:
-
-- [ ] Database transaction boundaries
-- [ ] Locking strategy
-- [ ] Consistency rules
-- [ ] Concurrent update handling
-- [ ] Rollback behavior
-
-### Interview Topic
-
-Be able to explain:
-
-> How does the application prevent race conditions and incorrect balances when two transfer requests happen at the same time?
-
----
-
-## 3.6 Transaction History
-
-Implement:
-
-- [ ] View transaction history
-- [ ] Transaction detail
 - [ ] Pagination
-- [ ] Sorting
-- [ ] Filtering
 - [ ] Search
-- [ ] Filter by type
-- [ ] Filter by status
-- [ ] Filter by date range
+- [ ] Advanced date filtering
+- [ ] Advanced type/status filtering
 
-### Example
+## 3.5 Audit Logging
+
+- [x] `TRANSFER_INITIATED`
+- [x] `TRANSFER_COMPLETED`
+- [x] `TRANSFER_FAILED`
+- [x] User ID recorded
+- [x] Transaction reference recorded
+- [x] Status recorded
+- [x] Message recorded
+- [x] Timestamp recorded
+- [x] Audit data persisted in `audit_logs`
+
+## 3.6 Error Handling
+
+- [x] Global exception handling
+- [x] Validation errors
+- [x] Authentication errors
+- [x] Authorization errors
+- [x] Business rule violations
+- [x] Resource-not-found errors
+- [x] Account Service business failures
+- [x] Account Service unavailable → 503
+- [x] Consistent error responses
+
+## 3.7 Transaction Service Testing
+
+- [x] Successful transfer
+- [x] Business failure
+- [x] Account Service unavailable
+- [x] Idempotency
+- [x] Missing idempotency key
+- [x] Same-account validation
+- [x] Zero amount
+- [x] Invalid decimal precision
+- [x] Spring context test
+- [x] Maven package/test validation
+
+## 3.8 Gateway Integration
+
+- [x] Transaction routes through Gateway
+- [x] Auth/Account/Transaction services accessible via `:8080`
+- [x] Frontend uses Gateway only
+- [x] CORS configuration
+- [x] OPTIONS preflight support
+
+### Phase 3 Exit Criteria
+
+- [x] Successful transfer works
+- [x] Invalid transfers rejected
+- [x] Insufficient funds rejected
+- [x] Duplicate transfer requests prevented
+- [x] Concurrent transfer behavior handled
+- [x] Transaction history works
+- [x] Audit logs generated
+- [x] Errors are structured
+- [x] Gateway integration works
+- [x] Swagger documents Transaction Service
+
+---
+
+# PHASE 4 — FRONTEND INTEGRATION, DASHBOARD, ADMIN & TESTING ✅
+
+## 4.1 Frontend Foundation
+
+- [x] React + TypeScript + Vite
+- [x] MUI
+- [x] React Router
+- [x] Axios
+- [x] Environment configuration
+- [x] MUI theme
+- [x] Application folder structure
+- [x] API client
+- [x] Protected route structure
+
+## 4.2 Frontend Authentication
+
+- [x] Register UI
+- [x] Login UI
+- [x] Logout UI
+- [x] AuthContext
+- [x] JWT persistence
+- [x] `/api/auth/me` integration
+- [x] Access token storage
+- [x] Refresh token storage
+- [x] 401 → refresh → retry Axios interceptor
+- [x] Failed refresh → login redirect
+- [x] ProtectedRoute
+- [x] AdminRoute
+- [x] ROLE_USER UI behavior
+- [x] ROLE_ADMIN UI behavior
+
+## 4.3 Customer Dashboard & Accounts
+
+- [x] Responsive MUI application layout
+- [x] Sidebar navigation
+- [x] Mobile navigation drawer
+- [x] Active navigation state
+- [x] Customer profile creation
+- [x] Account creation
+- [x] Savings/current account selection
+- [x] Account summary
+- [x] Balance display
+- [x] Account status display
+- [x] Loading states
+- [x] Error states
+- [x] Empty states
+
+## 4.4 Beneficiary UI
+
+- [x] Beneficiary list
+- [x] Add beneficiary
+- [x] Duplicate handling
+- [x] Own-account rejection
+- [x] Invalid-account handling
+- [x] Delete confirmation dialog
+- [x] Delete operation
+- [x] User ownership isolation
+- [x] API error messages
+
+## 4.5 Transfer UI
+
+- [x] Source account selector
+- [x] Beneficiary selector
+- [x] Amount input
+- [x] Description input
+- [x] Client-side amount validation
+- [x] Real beneficiary account ID integration
+- [x] Unique idempotency key per logical transfer attempt
+- [x] Transfer result UI
+- [x] Success state
+- [x] Failure state
+- [x] Updated account balances after transfer
+
+## 4.6 Transaction History UI
+
+- [x] Account selector
+- [x] Transaction list
+- [x] Newest-first display
+- [x] Sender transaction visibility
+- [x] Receiver transaction visibility
+- [x] Status chips
+- [x] Empty history state
+- [x] Error/loading states
+
+## 4.7 Dashboard Analytics
+
+- [x] Total balance
+- [x] Total transactions
+- [x] Completed transaction count
+- [x] Failed transaction count
+- [x] Transaction volume
+- [x] Recent transactions
+- [x] Credits/debits analytics
+- [x] Recharts integration
+- [x] Empty chart state
+- [x] Real backend data
+
+## 4.8 Admin Dashboard
+
+- [x] Admin-only route
+- [x] Admin user statistics
+- [x] Customer statistics
+- [x] Account statistics
+- [x] Active account count
+- [x] Total active balance
+- [x] Transaction statistics
+- [x] Completed transaction count
+- [x] Failed transaction count
+- [x] Transaction volume
+- [x] Backend `ROLE_ADMIN` enforcement
+
+Admin APIs:
 
 ```text
-GET /transactions
-GET /transactions/{id}
+GET /api/admin/user-stats
+GET /api/admin/account-stats
+GET /api/admin/transaction-stats
 ```
 
-Possible filters:
+## 4.9 Frontend Polish
+
+- [x] Responsive layout
+- [x] Active navigation
+- [x] MUI confirmation dialog
+- [x] Consistent loading states
+- [x] Consistent error states
+- [x] Informative empty states
+- [x] Centralized API error message helper
+- [x] Transfer form reset after success
+- [x] Admin navigation visible only to admins
+- [x] Favicon reference cleanup
+
+## 4.10 Frontend Automated Tests
+
+Testing stack:
 
 ```text
-type=DEBIT
-status=COMPLETED
-from=2026-08-01
-to=2026-08-31
+Vitest
+React Testing Library
+@testing-library/user-event
 ```
 
----
+Critical tests implemented:
 
-## 3.7 Audit Logging
+- [x] AuthContext tests
+- [x] ProtectedRoute tests
+- [x] AdminRoute tests
+- [x] Login tests
+- [x] Transfer tests
+- [x] Dashboard tests
+- [x] Transfer idempotency-key behavior
+- [x] Transfer beneficiary-account-ID mapping
+- [x] Role-based route behavior
+- [x] Dashboard rendering/analytics states
 
-Track important events:
+## 4.11 Frontend Build
 
-```text
-LOGIN
-ACCOUNT_CREATED
-TRANSFER_INITIATED
-TRANSFER_COMPLETED
-TRANSFER_FAILED
-ACCOUNT_BLOCKED
-BENEFICIARY_ADDED
-```
+- [x] `npm run build`
+- [x] `npm run test:run`
 
-Audit data should include:
+### Phase 4 Exit Criteria
 
-```text
-user
-action
-resource
-timestamp
-status
-reference
-```
-
-Example:
-
-```text
-User: 1023
-Action: TRANSFER_COMPLETED
-Transaction: TXN98473
-Timestamp: ...
-```
+- [x] Customer dashboard works
+- [x] Accounts work
+- [x] Beneficiaries work
+- [x] Transfers work end-to-end
+- [x] Transaction history works
+- [x] Charts use backend data
+- [x] Admin dashboard works
+- [x] RBAC works in practice
+- [x] Critical frontend tests pass
+- [x] Production frontend build passes
+- [x] Frontend integrated through API Gateway
 
 ---
 
-## 3.8 Error Handling
+# PHASE 5 — DOCKER, DEPLOYMENT & FINAL DOCUMENTATION ⏳
 
-Implement:
-
-- [ ] Global exception handling
-- [ ] Validation errors
-- [ ] Authentication errors
-- [ ] Authorization errors
-- [ ] Business rule violations
-- [ ] Transaction failures
-- [ ] Resource-not-found errors
-- [ ] Consistent error response format
-
-Example:
-
-```json
-{
-  "timestamp": "...",
-  "status": 400,
-  "error": "INSUFFICIENT_FUNDS",
-  "message": "Insufficient balance",
-  "path": "/transactions/transfer"
-}
-```
-
----
-
-## 3.9 REST API Quality
-
-Implement:
-
-- [ ] DTOs
-- [ ] Request validation
-- [ ] Correct HTTP status codes
-- [ ] Pagination
-- [ ] Filtering
-- [ ] Sorting
-- [ ] Consistent responses
-- [ ] Consistent error structure
-- [ ] Swagger/OpenAPI documentation
-
----
-
-## 3.10 Phase 3 Exit Criteria
-
-- [ ] Successful transfer works
-- [ ] Invalid transfers are rejected
-- [ ] Insufficient funds are rejected
-- [ ] Account status rules are enforced
-- [ ] Duplicate transfer requests are prevented
-- [ ] Transaction status is stored
-- [ ] Transaction history works
-- [ ] Audit logs are generated
-- [ ] Concurrent balance updates are handled
-- [ ] APIs return consistent errors
-- [ ] Swagger documents core APIs
-
----
-
-# PHASE 4 — DASHBOARDS, ANALYTICS, ADMIN & TESTING
-
-## 4.1 Customer Dashboard
-
-Display:
-
-- [ ] Total balance
-- [ ] Number of accounts
-- [ ] Recent transactions
-- [ ] Recent credits
-- [ ] Recent debits
-- [ ] Completed transaction count
-- [ ] Failed transaction count
-
-Keep UI simple.
-
----
-
-## 4.2 Chart.js Analytics
-
-Implement:
-
-- [ ] Monthly spending chart
-- [ ] Debit vs credit chart
-- [ ] Transaction volume by day
-- [ ] Spending/transactions by category if categories are added
-
-Suggested dashboard metrics:
-
-```text
-Total Balance
-Monthly Credits
-Monthly Debits
-Completed Transactions
-Failed Transactions
-```
-
----
-
-## 4.3 Admin Dashboard
-
-Implement:
-
-- [ ] View customers
-- [ ] Search users
-- [ ] View accounts
-- [ ] Search/filter accounts
-- [ ] View transactions
-- [ ] Search transaction by reference
-- [ ] Filter failed transactions
-- [ ] View transaction status
-- [ ] Activate/deactivate accounts
-- [ ] View audit logs
-- [ ] View high-level system statistics
-
-Suggested APIs:
-
-```text
-GET /admin/users
-GET /admin/accounts
-GET /admin/transactions
-GET /admin/audit-logs
-```
-
----
-
-## 4.4 Backend Testing
-
-### Unit Tests
-
-Test:
-
-- [ ] Registration logic
-- [ ] Login logic
-- [ ] JWT-related logic
-- [ ] Authorization rules
-- [ ] Account creation
-- [ ] Account validation
-- [ ] Transfer validation
-- [ ] Insufficient funds
-- [ ] Invalid account
-- [ ] Duplicate transaction
-- [ ] Failed transaction
-- [ ] Audit log creation
-
-### Important Transfer Tests
-
-```text
-Given balance = ₹10,000
-Transfer ₹6,000 -> SUCCESS
-
-Given balance = ₹10,000
-Transfer ₹5,000 after the first transfer -> FAILURE
-```
-
-### Idempotency Test
-
-```text
-Same Idempotency-Key
-        |
-        +--> No duplicate transaction
-```
-
-### Integration Tests
-
-- [ ] API endpoint integration tests
-- [ ] Database integration tests
-- [ ] Security integration tests
-- [ ] Transaction integration tests
-- [ ] Testcontainers for realistic database testing
-
----
-
-## 4.5 Frontend Testing
-
-Test:
-
-- [ ] Login
-- [ ] Protected routes
-- [ ] Dashboard rendering
-- [ ] Account display
-- [ ] Transaction list
-- [ ] Transfer form
-- [ ] Form validation
-- [ ] Error handling
-- [ ] Logout
-
----
-
-## 4.6 Phase 4 Exit Criteria
-
-- [ ] Customer dashboard works
-- [ ] Charts use real backend data
-- [ ] Admin dashboard works
-- [ ] RBAC is visible in practice
-- [ ] Important backend business logic is tested
-- [ ] Frontend critical paths are tested
-- [ ] Integration tests cover important workflows
-
----
-
-# PHASE 5 — DOCKER, DEPLOYMENT, DOCUMENTATION & OPTIONAL ADVANCED FEATURES
+> Core application is complete. Phase 5 is packaging, deployment readiness, and final presentation.
 
 ## 5.1 Docker
 
-Containerize:
-
-```text
-postgres
-auth-service
-account-service
-transaction-service
-api-gateway
-frontend
-```
-
-Create:
-
-- [ ] Dockerfile for backend services
+- [ ] Dockerfile for Auth Service
+- [ ] Dockerfile for Account Service
+- [ ] Dockerfile for Transaction Service
+- [ ] Dockerfile for API Gateway
 - [ ] Dockerfile for frontend
-- [ ] docker-compose.yml
-- [ ] Environment variables
-- [ ] Service networking
-- [ ] Database configuration
+- [ ] PostgreSQL container(s)
+- [ ] Docker Compose
+- [ ] Environment variable configuration
+- [ ] Inter-service networking
 - [ ] Startup/dependency configuration
+- [ ] Verify full stack with `docker compose up`
 
-### Target Developer Experience
-
-A new developer should eventually be able to run:
-
-```bash
-docker compose up
-```
-
-and start the complete local system.
-
----
-
-## 5.2 Git & GitHub
-
-- [ ] Meaningful repository structure
-- [ ] `.gitignore`
-- [ ] Environment secrets excluded
-- [ ] Meaningful commit messages
-- [ ] Feature branches where practical
-- [ ] Pull requests for meaningful changes
-- [ ] Protect main branch if desired
-- [ ] Add project screenshots later
-- [ ] Add architecture diagram
-- [ ] Add API documentation
-
----
-
-## 5.3 README.md
-
-README should contain:
-
-- [ ] Project overview
-- [ ] Use case
-- [ ] Key features
-- [ ] Architecture
-- [ ] Tech stack
-- [ ] Service responsibilities
-- [ ] Database design
-- [ ] API overview
-- [ ] Authentication flow
-- [ ] Transaction flow
-- [ ] Idempotency approach
-- [ ] Concurrency/consistency approach
-- [ ] Testing
-- [ ] Docker setup
-- [ ] Local installation
-- [ ] Environment variables
-- [ ] API documentation
-- [ ] Screenshots
-- [ ] Future enhancements
-- [ ] Interview talking points
-
----
-
-## 5.4 API Documentation
-
-Document:
-
-- [ ] Auth endpoints
-- [ ] Account endpoints
-- [ ] Beneficiary endpoints
-- [ ] Transaction endpoints
-- [ ] Admin endpoints
-- [ ] Request/response examples
-- [ ] Authentication requirements
-- [ ] Error responses
-
----
-
-## 5.5 Deployment
-
-After local Docker setup works:
+## 5.2 Deployment
 
 - [ ] Choose deployment platform
 - [ ] Deploy frontend
 - [ ] Deploy backend services
 - [ ] Deploy PostgreSQL
-- [ ] Configure environment variables
-- [ ] Configure CORS
+- [ ] Configure production environment variables
 - [ ] Configure production secrets
-- [ ] Test production APIs
-- [ ] Test authentication
-- [ ] Test transaction flow
+- [ ] Configure production CORS
+- [ ] Test production authentication
+- [ ] Test production transfer flow
+- [ ] Test production database connectivity
 
-Deployment is a final step, not a reason to complicate the initial architecture.
+## 5.3 README
+
+Complete and verify:
+
+- [ ] Project overview
+- [ ] Features
+- [ ] Architecture
+- [ ] Service responsibilities
+- [ ] Technology stack
+- [ ] Database layout
+- [ ] Authentication flow
+- [ ] Transaction flow
+- [ ] Idempotency explanation
+- [ ] Concurrency strategy
+- [ ] Audit logging
+- [ ] API overview
+- [ ] Local setup
+- [ ] Environment variables
+- [ ] Test instructions
+- [ ] Swagger/OpenAPI links
+- [ ] Screenshots
+- [ ] Architecture diagram
+- [ ] Future enhancements
+
+## 5.4 API Documentation
+
+- [x] Auth Swagger/OpenAPI
+- [x] Account Swagger/OpenAPI
+- [x] Transaction Swagger/OpenAPI
+- [ ] Add final README links/examples
+- [ ] Document Gateway URLs
+- [ ] Document representative request/response examples
+- [ ] Document error response conventions
+
+## 5.5 Git / Repository Cleanup
+
+- [x] Feature branches used
+- [x] Meaningful commits
+- [x] Pull requests used
+- [x] Frontend branch pushed and PR raised to `develop`
+- [x] `.env` contains only public local frontend URL
+- [ ] Final `.gitignore` review
+- [ ] Secret scan / repository review
+- [ ] Remove obsolete files
+- [ ] Remove unused dependencies
+- [ ] Remove dead code
+- [ ] Confirm clean `git status`
+
+## 5.6 Screenshots / Portfolio Assets
+
+- [ ] Login
+- [ ] Dashboard
+- [ ] Accounts
+- [ ] Beneficiaries
+- [ ] Transfer result
+- [ ] Transaction history
+- [ ] Analytics
+- [ ] Admin dashboard
+- [ ] Swagger
+- [ ] Architecture diagram
 
 ---
 
 # 6. Optional Advanced Features
 
-> Add these only after the core project is complete and stable.
+> Add these only after the core application and Phase 5 packaging are complete.
 
 ## Notifications
 
-- [ ] Notification service
 - [ ] Email after successful transfer
 - [ ] Email after failed transfer
 - [ ] Notification history
-
-Possible flow:
-
-```text
-Transaction Service
-       |
-       v
-Transaction Event
-       |
-       v
-Notification Service
-       |
-       v
-Email
-```
-
----
+- [ ] Notification service
 
 ## Redis
 
-Potential use cases:
+Potential uses:
 
 - [ ] Caching
 - [ ] Rate limiting
-- [ ] Temporary token/session data
+- [ ] Temporary data
 - [ ] Frequently accessed read data
-
----
 
 ## Event-Driven Architecture
 
-Potential future flow:
+Potential flow:
 
 ```text
 Transaction Service
         |
         v
-   Transaction Event
-        |
-        +----> Notification Service
-        |
-        +----> Analytics/Reporting
+  Transaction Event
+      /       \
+     v         v
+Notification   Analytics
+Service        /Reporting
 ```
 
-Potential technology:
+Possible technology:
 
 - [ ] Apache Kafka
 
----
-
 ## Rate Limiting
 
-Implement limits for:
-
-- [ ] Login attempts
-- [ ] Transfer requests
-- [ ] Sensitive endpoints
-
----
+- [ ] Login attempt limits
+- [ ] Transfer request limits
+- [ ] Sensitive endpoint limits
 
 ## Account Statements
 
-- [ ] Monthly statement generation
+- [ ] Monthly statement
 - [ ] CSV export
 - [ ] PDF export
 
----
-
 ## Scheduled Transfers
-
-Example:
-
-```text
-Transfer ₹5,000
-every month
-```
-
-Features:
 
 - [ ] Schedule transfer
 - [ ] View scheduled transfers
@@ -1138,7 +865,7 @@ Features:
 
 # 7. Features Deliberately Excluded from MVP
 
-Do not add these just to increase the technology list:
+Do not add these merely to increase the technology list:
 
 - [ ] Kubernetes
 - [ ] Complex cloud infrastructure
@@ -1146,7 +873,7 @@ Do not add these just to increase the technology list:
 - [ ] Multiple messaging systems
 - [ ] Multiple caching systems
 - [ ] External payment gateway
-- [ ] Fraud detection ML model
+- [ ] Fraud-detection ML model
 - [ ] Complex banking integrations
 - [ ] Excessive microservices
 
@@ -1154,120 +881,50 @@ Do not add these just to increase the technology list:
 
 ---
 
-# 8. Suggested Development Order
+# 8. Current API Surface
+
+## Auth Service
 
 ```text
-1. Finalize requirements
-        ↓
-2. Design architecture
-        ↓
-3. Design database/entities
-        ↓
-4. Design API contracts
-        ↓
-5. Build Auth Service
-        ↓
-6. Build Account Service
-        ↓
-7. Build Transaction Service
-        ↓
-8. Build API Gateway
-        ↓
-9. Connect React frontend
-        ↓
-10. Build customer dashboard
-        ↓
-11. Build transaction analytics
-        ↓
-12. Build admin dashboard
-        ↓
-13. Add audit logging
-        ↓
-14. Add backend tests
-        ↓
-15. Add frontend tests
-        ↓
-16. Dockerize complete application
-        ↓
-17. Complete Swagger/OpenAPI
-        ↓
-18. Complete README
-        ↓
-19. Deploy
-        ↓
-20. Add optional advanced features
+POST /api/auth/register
+POST /api/auth/login
+POST /api/auth/refresh
+POST /api/auth/logout
+GET  /api/auth/me
+GET  /api/admin/user-stats
+```
+
+## Account Service
+
+```text
+POST /api/customers
+GET  /api/customers/me
+
+POST /api/accounts
+GET  /api/accounts
+GET  /api/accounts/{id}
+
+POST   /api/beneficiaries
+GET    /api/beneficiaries
+GET    /api/beneficiaries/{id}
+DELETE /api/beneficiaries/{id}
+
+GET /api/admin/account-stats
+```
+
+Internal service endpoints remain service-to-service and are not exposed through the Gateway.
+
+## Transaction Service
+
+```text
+POST /api/transactions/transfers
+GET  /api/transactions/account/{accountId}
+GET  /api/admin/transaction-stats
 ```
 
 ---
 
-# 9. Core Interview Topics to Master
-
-The project should allow you to confidently discuss these topics.
-
-## Authentication & Security
-
-- [ ] How JWT authentication works
-- [ ] Access tokens vs refresh tokens
-- [ ] Password hashing
-- [ ] Spring Security filters
-- [ ] Authentication vs authorization
-- [ ] Role-based access control
-- [ ] Protected endpoints
-
-## Transaction Processing
-
-- [ ] Database transactions
-- [ ] ACID principles
-- [ ] Balance validation
-- [ ] Rollback behavior
-- [ ] Transaction status
-- [ ] Failed transactions
-- [ ] Idempotency
-- [ ] Duplicate requests
-
-## Concurrency
-
-- [ ] Race conditions
-- [ ] Concurrent transfers
-- [ ] Database locking
-- [ ] Optimistic vs pessimistic locking
-- [ ] Maintaining correct balances
-
-## Microservices
-
-- [ ] Why services were separated
-- [ ] Service responsibilities
-- [ ] Service-to-service communication
-- [ ] API Gateway
-- [ ] Database-per-service principle
-- [ ] Trade-offs of microservices
-- [ ] What would change at larger scale
-
-## REST APIs
-
-- [ ] HTTP methods
-- [ ] HTTP status codes
-- [ ] DTOs
-- [ ] Validation
-- [ ] Pagination
-- [ ] Filtering
-- [ ] Sorting
-- [ ] Error response design
-
-## Testing
-
-- [ ] Unit testing
-- [ ] Mocking
-- [ ] Integration testing
-- [ ] Testcontainers
-- [ ] Frontend testing
-- [ ] API testing
-
----
-
-# 10. Important End-to-End Scenarios
-
-These should work before considering the MVP complete.
+# 9. Important End-to-End Scenarios
 
 ## Scenario 1 — Registration & Login
 
@@ -1276,22 +933,28 @@ Register
    ↓
 Login
    ↓
-JWT
+JWT + Refresh Token
    ↓
-Access protected dashboard
+/api/auth/me
+   ↓
+Protected dashboard
 ```
 
-## Scenario 2 — View Account
+- [x] Verified
+
+## Scenario 2 — Account Creation
 
 ```text
 Login
    ↓
-JWT
+Create customer profile
    ↓
-GET /accounts
+Create account
    ↓
 Account + balance displayed
 ```
+
+- [x] Verified
 
 ## Scenario 3 — Successful Transfer
 
@@ -1304,20 +967,24 @@ Select beneficiary
    ↓
 Enter amount
    ↓
-Validate
+Generate Idempotency-Key
    ↓
-Transfer
+Gateway
+   ↓
+Transaction Service
+   ↓
+Account Service
    ↓
 Debit sender
    ↓
 Credit receiver
    ↓
-Create transaction
-   ↓
 COMPLETED
    ↓
-Display transaction reference
+Transaction + Audit records
 ```
+
+- [x] Verified through UI
 
 ## Scenario 4 — Failed Transfer
 
@@ -1326,129 +993,232 @@ Transfer request
       ↓
 Validation
       ↓
-Insufficient balance
+Business rule failure
       ↓
 FAILED
       ↓
 No incorrect balance update
       ↓
-Failure recorded
+Failure audited
 ```
+
+- [x] Verified
 
 ## Scenario 5 — Duplicate Request
 
 ```text
 Request + Idempotency-Key
           ↓
-Transfer executed
+     Transfer executed
           ↓
-Retry same request
+       Retry same key
           ↓
 Existing transaction returned
           ↓
 No duplicate debit
 ```
 
-## Scenario 6 — Admin Monitoring
+- [x] Verified
+
+## Scenario 6 — Role-Based Admin Monitoring
 
 ```text
-ADMIN Login
+ROLE_ADMIN
     ↓
 Admin Dashboard
     ↓
-Users / Accounts / Transactions / Audit Logs
+Users / Customers / Accounts / Transactions
 ```
+
+- [x] Verified through UI
+- [x] Backend admin APIs protected by role
+
+## Scenario 7 — Frontend Token Refresh
+
+```text
+Expired access token
+        ↓
+401
+        ↓
+Refresh token
+        ↓
+New access token
+        ↓
+Retry original request
+```
+
+- [x] Verified
 
 ---
 
-# 11. Definition of Done
+# 10. Definition of Done
 
-The core project is complete only when:
+## Core Application
 
-- [ ] Authentication works
-- [ ] JWT protection works
-- [ ] USER/ADMIN roles work
-- [ ] Accounts work
-- [ ] Beneficiaries work
-- [ ] Transfers work
-- [ ] Balance validation works
-- [ ] Duplicate transfers are prevented
-- [ ] Concurrent transfer behavior is handled
-- [ ] Transaction lifecycle is stored
-- [ ] Transaction history works
-- [ ] Audit logs work
-- [ ] Admin monitoring works
-- [ ] Charts display real backend data
-- [ ] Backend tests pass
-- [ ] Frontend critical-path tests pass
-- [ ] Swagger is available
-- [ ] Docker Compose runs the system
-- [ ] README explains the architecture and setup
-- [ ] Project is deployed or deployment-ready
+- [x] Authentication works
+- [x] JWT protection works
+- [x] USER/ADMIN roles work
+- [x] Customer profile works
+- [x] Accounts work
+- [x] Beneficiaries work
+- [x] Transfers work
+- [x] Balance validation works
+- [x] Duplicate transfers are prevented
+- [x] Concurrent transfer behavior is handled
+- [x] Transaction lifecycle is stored
+- [x] Transaction history works
+- [x] Audit logs work
+- [x] Admin monitoring works
+- [x] Charts display real backend data
+- [x] Backend tests pass
+- [x] Frontend critical-path tests pass
+- [x] Swagger is available
+- [x] API Gateway integration works
+
+## Remaining Definition-of-Done Items
+
+- [ ] Docker Compose runs the complete system
+- [ ] README fully documents architecture/setup
+- [ ] Architecture diagram added
+- [ ] Screenshots added
+- [ ] Deployment-ready configuration reviewed
+
+---
+
+# 11. Core Interview Topics to Master
+
+## Authentication & Security
+
+- [x] JWT authentication
+- [x] Access token vs refresh token
+- [x] Password hashing
+- [x] Spring Security filters/resource server
+- [x] Authentication vs authorization
+- [x] RBAC
+- [x] Protected endpoints
+- [x] Frontend token refresh flow
+- [x] Service-to-service secret protection
+
+## Transaction Processing
+
+- [x] Database transactions
+- [x] ACID principles
+- [x] Balance validation
+- [x] Rollback/error behavior
+- [x] Transaction statuses
+- [x] Failed transactions
+- [x] Idempotency
+- [x] Duplicate requests
+- [x] Audit events
+
+## Concurrency
+
+- [x] Race conditions
+- [x] Concurrent transfers
+- [x] Pessimistic locking
+- [x] Optimistic/version-aware update strategy
+- [x] Maintaining correct balances
+
+## Microservices
+
+- [x] Why services were separated
+- [x] Service responsibilities
+- [x] Service-to-service REST calls
+- [x] API Gateway
+- [x] Database-per-service ownership
+- [x] Security boundaries
+- [x] Microservice trade-offs
+
+## REST APIs
+
+- [x] HTTP methods
+- [x] HTTP status codes
+- [x] DTOs
+- [x] Validation
+- [x] Error response design
+- [x] Swagger/OpenAPI
+
+## Testing
+
+- [x] Unit testing
+- [x] Mockito
+- [x] Spring Boot tests
+- [x] API testing with Postman
+- [x] Frontend component testing
+- [x] Route testing
+- [x] Form testing
+- [x] Critical-path testing
+- [ ] Testcontainers
+- [ ] Full end-to-end automated browser testing
 
 ---
 
 # 12. Resume-Focused Outcome
 
-After completion, the project should demonstrate:
+The completed core project demonstrates:
 
 - Secure JWT-based authentication
+- Refresh-token based session continuation
 - Role-based access control
-- Spring Boot REST API development
-- Microservice architecture
-- PostgreSQL database design
-- Financial transaction processing
+- Spring Boot microservices
+- API Gateway architecture
+- PostgreSQL database ownership per service
+- Customer and account management
+- Beneficiary management
+- Financial transfer processing
 - Idempotent API design
-- Concurrency/consistency handling
+- Concurrency-safe balance updates
+- Transaction history
 - Audit logging
-- React + TypeScript development
-- Chart.js data visualization
-- Unit and integration testing
-- Dockerized application development
-- API documentation
+- React + TypeScript + MUI
+- Recharts analytics
+- Admin monitoring
+- Backend automated testing
+- Frontend critical-path testing
+- Swagger/OpenAPI documentation
 
 ## Strong Resume-Level Project Description
 
-> **Digital Banking Platform** — Built a secure full-stack banking platform using Java, Spring Boot, React, JWT, PostgreSQL, and microservices, supporting account management, beneficiary handling, money transfers, transaction tracking, role-based access, audit logging, and financial analytics. Implemented idempotent transfer processing, validation, concurrency-safe balance updates, automated testing, and Dockerized local deployment.
+> **Digital Banking Platform** — Built a secure full-stack banking platform using Java, Spring Boot, React, TypeScript, JWT, PostgreSQL, and microservices, supporting customer/account management, beneficiaries, money transfers, transaction history, audit logging, role-based admin monitoring, and financial analytics. Implemented idempotent transfer processing, concurrency-safe balance updates, service-to-service authentication, automated backend/frontend testing, API Gateway routing, and Swagger/OpenAPI documentation.
 
 ---
 
 # 13. Final Priority Order
 
-When time is limited, prioritize in this order:
+## Priority 1 — Must Be Excellent
 
-### Priority 1 — Must Be Excellent
+1. Authentication & Spring Security ✅
+2. Account management ✅
+3. Transfer business logic ✅
+4. Balance validation ✅
+5. Transaction lifecycle ✅
+6. Idempotency ✅
+7. Concurrency/consistency ✅
+8. REST API quality ✅
+9. Testing ✅
 
-1. JWT authentication
-2. Spring Security
-3. Account management
-4. Transfer business logic
-5. Balance validation
-6. Transaction lifecycle
-7. Idempotency
-8. Concurrency/consistency
-9. REST API quality
-10. Testing
+## Priority 2 — Completed Core Product
 
-### Priority 2 — Must Work
+10. React dashboard ✅
+11. Admin dashboard ✅
+12. Transaction history ✅
+13. Audit logging ✅
+14. Recharts analytics ✅
+15. API Gateway ✅
+16. Swagger/OpenAPI ✅
 
-11. React dashboard
-12. Admin dashboard
-13. Transaction history
-14. Audit logs
-15. Chart.js analytics
-16. Docker Compose
-17. Swagger/OpenAPI
+## Priority 3 — Remaining Packaging / Optional Work
 
-### Priority 3 — Nice to Have
-
-18. Redis
-19. Notifications
-20. Kafka
-21. Rate limiting
-22. Statements
-23. Scheduled transfers
-24. GitHub Actions
+17. Docker Compose ⏳
+18. Final README + screenshots ⏳
+19. Deployment ⏳
+20. Redis
+21. Notifications
+22. Kafka
+23. Rate limiting
+24. Statements
+25. Scheduled transfers
+26. GitHub Actions
 
 ---
 
@@ -1461,5 +1231,3 @@ The strongest version of this project is not the one with the most tools.
 It is the one where you can confidently explain:
 
 > **“Here is the problem, here is why I designed the system this way, here is how the transaction is processed, here is how I keep the data consistent, here is how I secure it, here is how I test it, and here is how the services interact.”**
-
-That is the level of depth to aim for.
