@@ -8,6 +8,8 @@ import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.math.BigDecimal;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -23,6 +25,15 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
     );
 
     boolean existsByAccountNumber(String accountNumber);
+
+    @Query("""
+        SELECT COALESCE(SUM(a.balance), 0)
+        FROM Account a
+        WHERE a.status = com.digitalbanking.account.entity.AccountStatus.ACTIVE
+        """)
+    BigDecimal getTotalActiveBalance();
+
+    long countByStatus(AccountStatus status);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT a FROM Account a WHERE a.id = :id")

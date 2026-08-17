@@ -6,6 +6,11 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 import java.util.Optional;
 
+import com.digitalbanking.transaction.entity.TransactionStatus;
+import org.springframework.data.jpa.repository.Query;
+
+import java.math.BigDecimal;
+
 public interface TransactionRepository
         extends JpaRepository<Transaction, Long> {
 
@@ -29,4 +34,13 @@ public interface TransactionRepository
             Long sourceAccountId,
             Long destinationAccountId
     );
+
+    long countByStatus(TransactionStatus status);
+
+    @Query("""
+        SELECT COALESCE(SUM(t.amount), 0)
+        FROM Transaction t
+        WHERE t.status = com.digitalbanking.transaction.entity.TransactionStatus.COMPLETED
+        """)
+    BigDecimal getCompletedTransactionVolume();
 }
