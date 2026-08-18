@@ -1,0 +1,140 @@
+services:
+
+  postgres:
+    image: postgres:17-alpine
+    container_name: digital-banking-postgres
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+
+    ports:
+      - "5432:5432"
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+      - ./docker/postgres/init:/docker-entrypoint-initdb.d
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${DB_USERNAME}"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+
+  auth-service:
+    image: digital-banking-auth:latest
+    container_name: digital-banking-auth
+    restart: unless-stopped
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+    environment:
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+
+      AUTH_DB_URL: jdbc:postgresql://postgres:5432/auth_db
+
+      JWT_SECRET: ${JWT_SECRET}
+
+    ports:
+      - "8081:8081"
+
+
+  account-service:
+    image: digital-banking-account:latest
+    container_name: digital-banking-account
+    restart: unless-stopped
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+      auth-service:
+        condition: service_started
+
+    environment:
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+
+      ACCOUNT_DB_URL: jdbc:postgresql://postgres:5432/account_db
+
+      JWT_SECRET: ${JWT_SECRET}
+      INTERNAL_SERVICE_SECRET: ${INTERNAL_SERVICE_SECRET}
+
+    ports:
+      - "8082:8082"
+
+
+  transaction-service:
+    image: digital-banking-transaction:latest
+    container_name: digital-banking-transaction
+    restart: unless-stopped
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+      account-service:
+        condition: service_started
+
+    environment:
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+
+      TRANSACTION_DB_URL: jdbc:postgresql://postgres:5432/transaction_db
+
+      JWT_SECRET: ${JWT_SECRET}
+      INTERNAL_SERVICE_SECRET: ${INTERNAL_SERVICE_SECRET}
+
+      ACCOUNT_SERVICE_URL: http://account-service:8082
+
+    ports:
+      - "8083:8083"
+
+
+  api-gateway:
+    image: digital-banking-gateway:latest
+    container_name: digital-banking-gateway
+    restart: unless-stopped
+
+    depends_on:
+      auth-service:
+        condition: service_started
+      account-service:
+        condition: service_started
+      transaction-service:
+        condition: service_started
+
+    environment:
+      AUTH_SERVICE_URL: http://auth-service:8081
+      ACCOUNT_SERVICE_URL: http://account-service:8082
+      TRANSACTION_SERVICE_URL: http://transaction-service:8083
+
+      CORS_ALLOWED_ORIGINS: http://localhost
+
+    ports:
+      - "8080:8080"
+
+
+  frontend:
+    image: digital-banking-frontend:latest
+    container_name: digital-banking-frontend
+    restart: unless-stopped
+
+    depends_on:
+      api-gateway:
+        condition: service_started
+
+    ports:
+      - "80:80"
+
+
+volumes:
+  postgres_data:
