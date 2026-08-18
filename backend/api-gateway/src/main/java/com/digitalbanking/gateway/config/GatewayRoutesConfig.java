@@ -1,5 +1,6 @@
 package com.digitalbanking.gateway.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.function.RouterFunction;
@@ -12,6 +13,15 @@ import static org.springframework.cloud.gateway.server.mvc.handler.HandlerFuncti
 @Configuration
 public class GatewayRoutesConfig {
 
+    @Value("${services.auth.url}")
+    private String authServiceUrl;
+
+    @Value("${services.account.url}")
+    private String accountServiceUrl;
+
+    @Value("${services.transaction.url}")
+    private String transactionServiceUrl;
+
     @Bean
     public RouterFunction<ServerResponse> authServiceRoute() {
         return route("auth-service")
@@ -20,7 +30,7 @@ public class GatewayRoutesConfig {
                 .PUT("/api/auth/**", http())
                 .PATCH("/api/auth/**", http())
                 .DELETE("/api/auth/**", http())
-                .before(uri("http://localhost:8081"))
+                .before(uri(authServiceUrl))
                 .build();
     }
 
@@ -32,7 +42,7 @@ public class GatewayRoutesConfig {
                 .PUT("/api/customers/**", http())
                 .PATCH("/api/customers/**", http())
                 .DELETE("/api/customers/**", http())
-                .before(uri("http://localhost:8082"))
+                .before(uri(accountServiceUrl))
                 .build();
     }
 
@@ -44,7 +54,7 @@ public class GatewayRoutesConfig {
                 .PUT("/api/accounts/**", http())
                 .PATCH("/api/accounts/**", http())
                 .DELETE("/api/accounts/**", http())
-                .before(uri("http://localhost:8082"))
+                .before(uri(accountServiceUrl))
                 .build();
     }
 
@@ -56,7 +66,7 @@ public class GatewayRoutesConfig {
                 .PUT("/api/beneficiaries/**", http())
                 .PATCH("/api/beneficiaries/**", http())
                 .DELETE("/api/beneficiaries/**", http())
-                .before(uri("http://localhost:8082"))
+                .before(uri(accountServiceUrl))
                 .build();
     }
 
@@ -68,7 +78,7 @@ public class GatewayRoutesConfig {
                 .PUT("/api/transactions/**", http())
                 .PATCH("/api/transactions/**", http())
                 .DELETE("/api/transactions/**", http())
-                .before(uri("http://localhost:8083"))
+                .before(uri(transactionServiceUrl))
                 .build();
     }
 
@@ -76,7 +86,7 @@ public class GatewayRoutesConfig {
     public RouterFunction<ServerResponse> adminUserRoute() {
         return route("admin-user-stats")
                 .GET("/api/admin/user-stats", http())
-                .before(uri("http://localhost:8081"))
+                .before(uri(authServiceUrl))
                 .build();
     }
 
@@ -84,7 +94,7 @@ public class GatewayRoutesConfig {
     public RouterFunction<ServerResponse> adminAccountRoute() {
         return route("admin-account-stats")
                 .GET("/api/admin/account-stats", http())
-                .before(uri("http://localhost:8082"))
+                .before(uri(accountServiceUrl))
                 .build();
     }
 
@@ -92,9 +102,7 @@ public class GatewayRoutesConfig {
     public RouterFunction<ServerResponse> adminTransactionRoute() {
         return route("admin-transaction-stats")
                 .GET("/api/admin/transaction-stats", http())
-                .before(uri("http://localhost:8083"))
+                .before(uri(transactionServiceUrl))
                 .build();
     }
-
-
 }
