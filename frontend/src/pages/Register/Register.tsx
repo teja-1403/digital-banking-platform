@@ -2,7 +2,6 @@ import {
   Alert,
   Box,
   Button,
-  Container,
   Paper,
   TextField,
   Typography,
@@ -15,19 +14,17 @@ import { Link, useNavigate } from "react-router-dom";
 
 import { useAuth } from "../../context/AuthContext";
 
+import AuthLayout from "../../components/auth/AuthLayout";
+
 export default function Register() {
   const navigate = useNavigate();
-
   const { register } = useAuth();
 
   const [username, setUsername] = useState("");
-
   const [email, setEmail] = useState("");
-
   const [password, setPassword] = useState("");
 
   const [error, setError] = useState("");
-
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (event: SubmitEvent<HTMLFormElement>) => {
@@ -52,78 +49,103 @@ export default function Register() {
   };
 
   return (
-    <Container maxWidth="sm">
-      <Box
+    <AuthLayout>
+      <Paper
+        elevation={3}
         sx={{
-          minHeight: "100vh",
-          display: "flex",
-          alignItems: "center",
+          width: "100%",
+          p: {
+            xs: 3,
+            sm: 4,
+          },
+          borderRadius: 3,
         }}
       >
-        <Paper
-          elevation={2}
+        <Typography
+          variant="h4"
+          gutterBottom
           sx={{
-            width: "100%",
-            p: 4,
+            color: "text.primary",
+            fontWeight: 700,
           }}
         >
-          <Typography variant="h4" gutterBottom>
-            Create account
-          </Typography>
+          Create your account
+        </Typography>
 
-          {error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {error}
-            </Alert>
-          )}
+        <Typography
+          color="text.secondary"
+          sx={{
+            mb: 3,
+          }}
+        >
+          Join SecureBank and get started with digital banking.
+        </Typography>
 
-          <Box component="form" onSubmit={handleSubmit}>
-            <TextField
-              fullWidth
-              label="Username"
-              margin="normal"
-              value={username}
-              onChange={(event) => setUsername(event.target.value)}
-              required
-            />
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
 
-            <TextField
-              fullWidth
-              label="Email"
-              type="email"
-              margin="normal"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              required
-            />
+        <Box component="form" onSubmit={handleSubmit}>
+          <TextField
+            fullWidth
+            label="Username"
+            margin="normal"
+            value={username}
+            onChange={(event) => setUsername(event.target.value)}
+            required
+            autoComplete="username"
+          />
 
-            <TextField
-              fullWidth
-              label="Password"
-              type="password"
-              margin="normal"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              required
-            />
+          <TextField
+            fullWidth
+            label="Email"
+            type="email"
+            margin="normal"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            required
+            autoComplete="email"
+          />
 
-            <Button
-              fullWidth
-              type="submit"
-              variant="contained"
-              size="large"
-              disabled={isSubmitting}
-              sx={{ mt: 2 }}
-            >
-              {isSubmitting ? "Creating..." : "Create account"}
-            </Button>
-          </Box>
+          <TextField
+            fullWidth
+            label="Password"
+            type="password"
+            margin="normal"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            required
+            autoComplete="new-password"
+          />
 
-          <Typography sx={{ mt: 3 }} align="center">
-            Already have an account? <Link to="/login">Sign in</Link>
-          </Typography>
-        </Paper>
-      </Box>
-    </Container>
+          <Button
+            fullWidth
+            type="submit"
+            variant="contained"
+            size="large"
+            disabled={isSubmitting}
+            sx={{
+              mt: 2,
+              py: 1.4,
+              borderRadius: 2,
+              fontWeight: 600,
+            }}
+          >
+            {isSubmitting ? "Creating..." : "Create account"}
+          </Button>
+        </Box>
+
+        <Typography
+          sx={{
+            mt: 3,
+            textAlign: "center",
+          }}
+        >
+          Already have an account? <Link to="/login">Sign in</Link>
+        </Typography>
+      </Paper>
+    </AuthLayout>
   );
 }
