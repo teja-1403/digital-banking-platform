@@ -2,32 +2,31 @@ import {
   Alert,
   Box,
   Button,
-  Container,
   Paper,
   TextField,
   Typography,
 } from "@mui/material";
 
-import { type FormEvent, useState } from "react";
+import { useState } from "react";
+import type { FormEvent } from "react";
 
 import { Link, useNavigate } from "react-router-dom";
 
 import { useAuth } from "../../context/AuthContext";
 
+import AuthLayout from "../../components/auth/AuthLayout";
+
 export default function Login() {
   const navigate = useNavigate();
-
   const { login } = useAuth();
 
   const [username, setUsername] = useState("");
-
   const [password, setPassword] = useState("");
 
   const [error, setError] = useState("");
-
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = async (event: FormEvent) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     setError("");
@@ -40,7 +39,7 @@ export default function Login() {
       });
 
       navigate("/dashboard");
-    } catch (err) {
+    } catch {
       setError("Invalid username or password.");
     } finally {
       setIsSubmitting(false);
@@ -48,72 +47,92 @@ export default function Login() {
   };
 
   return (
-    <Container maxWidth="sm">
-      <Box
+    <AuthLayout>
+      <Paper
+        elevation={3}
         sx={{
-          minHeight: "100vh",
-          display: "flex",
-          alignItems: "center",
+          width: "100%",
+          p: {
+            xs: 3,
+            sm: 4,
+          },
+          borderRadius: 3,
         }}
       >
-        <Paper
-          elevation={2}
+        <Typography
+          variant="h4"
+          gutterBottom
           sx={{
-            width: "100%",
-            p: 4,
+            color: "text.primary",
+            fontWeight: 700,
           }}
         >
-          <Typography variant="h4" gutterBottom>
-            Sign in
-          </Typography>
+          Sign in
+        </Typography>
 
-          <Typography color="text.secondary" sx={{ mb: 3 }}>
-            Digital Banking Platform
-          </Typography>
+        <Typography
+          color="text.secondary"
+          sx={{
+            mb: 3,
+          }}
+        >
+          Sign in to manage your accounts and banking activity.
+        </Typography>
 
-          {error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {error}
-            </Alert>
-          )}
+        {error && (
+          <Alert severity="error" sx={{ mb: 2 }}>
+            {error}
+          </Alert>
+        )}
 
-          <Box component="form" onSubmit={handleSubmit}>
-            <TextField
-              fullWidth
-              label="Username"
-              margin="normal"
-              value={username}
-              onChange={(event) => setUsername(event.target.value)}
-              required
-            />
+        <Box component="form" onSubmit={handleSubmit}>
+          <TextField
+            fullWidth
+            label="Username"
+            margin="normal"
+            value={username}
+            onChange={(event) => setUsername(event.target.value)}
+            required
+            autoComplete="username"
+          />
 
-            <TextField
-              fullWidth
-              label="Password"
-              type="password"
-              margin="normal"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              required
-            />
+          <TextField
+            fullWidth
+            label="Password"
+            type="password"
+            margin="normal"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            required
+            autoComplete="current-password"
+          />
 
-            <Button
-              fullWidth
-              type="submit"
-              variant="contained"
-              size="large"
-              disabled={isSubmitting}
-              sx={{ mt: 2 }}
-            >
-              {isSubmitting ? "Signing in..." : "Sign in"}
-            </Button>
-          </Box>
+          <Button
+            fullWidth
+            type="submit"
+            variant="contained"
+            size="large"
+            disabled={isSubmitting}
+            sx={{
+              mt: 2,
+              py: 1.4,
+              borderRadius: 2,
+              fontWeight: 600,
+            }}
+          >
+            {isSubmitting ? "Signing in..." : "Sign in"}
+          </Button>
+        </Box>
 
-          <Typography sx={{ mt: 3 }} align="center">
-            Don't have an account? <Link to="/register">Register</Link>
-          </Typography>
-        </Paper>
-      </Box>
-    </Container>
+        <Typography
+          sx={{
+            mt: 3,
+            textAlign: "center",
+          }}
+        >
+          Don't have an account? <Link to="/register">Create an account</Link>
+        </Typography>
+      </Paper>
+    </AuthLayout>
   );
 }
