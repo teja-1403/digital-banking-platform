@@ -13,10 +13,13 @@ Phase 1 — Authentication & Security       ✅ Complete
 Phase 2 — Account Management              ✅ Complete
 Phase 3 — Transaction Engine              ✅ Complete
 Phase 4 — Frontend Integration            ✅ Complete
-Phase 5 — Docker / Deployment / Final Docs ⏳ Remaining / Optional
+Phase 5 — Docker / Deployment             ✅ Complete
+Phase 6 — Core Workflow Refinement (v2)   ⏳ Planned
 ```
 
-The core application is complete and the Phase 4 frontend branch has been pushed and raised as a PR to `develop`.
+The core application, local Docker environment, Render backend deployment, Render PostgreSQL deployment, and Vercel frontend deployment have been completed.
+
+The next version should focus on **basic banking workflow completeness and correctness** rather than adding more infrastructure or optional technologies.
 
 ---
 
@@ -133,9 +136,13 @@ transaction_db
 - [x] Feature branches
 - [x] Pull requests
 - [x] Environment variable configuration
-- [ ] Docker
-- [ ] Docker Compose
+- [x] Docker
+- [x] Docker Compose
 - [ ] GitHub Actions
+- [x] Docker Hub image publishing
+- [x] Render Web Services
+- [x] Render PostgreSQL
+- [x] Vercel frontend deployment
 
 ## Documentation
 
@@ -709,60 +716,94 @@ Critical tests implemented:
 
 ---
 
-# PHASE 5 — DOCKER, DEPLOYMENT & FINAL DOCUMENTATION ⏳
+# PHASE 5 — DOCKER, DEPLOYMENT & FINAL DOCUMENTATION ✅
 
-> Core application is complete. Phase 5 is packaging, deployment readiness, and final presentation.
+> Local containerization and the portfolio deployment are complete.
 
 ## 5.1 Docker
 
-- [ ] Dockerfile for Auth Service
-- [ ] Dockerfile for Account Service
-- [ ] Dockerfile for Transaction Service
-- [ ] Dockerfile for API Gateway
-- [ ] Dockerfile for frontend
-- [ ] PostgreSQL container(s)
-- [ ] Docker Compose
-- [ ] Environment variable configuration
-- [ ] Inter-service networking
-- [ ] Startup/dependency configuration
-- [ ] Verify full stack with `docker compose up`
+- [x] Dockerfile for Auth Service
+- [x] Dockerfile for Account Service
+- [x] Dockerfile for Transaction Service
+- [x] Dockerfile for API Gateway
+- [x] Dockerfile for frontend
+- [x] PostgreSQL container
+- [x] Docker Compose
+- [x] Environment variable configuration
+- [x] Inter-service networking
+- [x] Startup/dependency configuration
+- [x] Full stack verified with `docker compose up`
+- [x] Local registration/login/customer/account flow verified in containers
 
 ## 5.2 Deployment
 
-- [ ] Choose deployment platform
-- [ ] Deploy frontend
-- [ ] Deploy backend services
-- [ ] Deploy PostgreSQL
-- [ ] Configure production environment variables
-- [ ] Configure production secrets
-- [ ] Configure production CORS
-- [ ] Test production authentication
-- [ ] Test production transfer flow
-- [ ] Test production database connectivity
+- [x] Choose deployment platform
+- [x] Render PostgreSQL
+- [x] Create `auth_db`
+- [x] Create `account_db`
+- [x] Create `transaction_db`
+- [x] Deploy Auth Service to Render
+- [x] Deploy Account Service to Render
+- [x] Deploy Transaction Service to Render
+- [x] Deploy API Gateway to Render
+- [x] Deploy React frontend to Vercel
+- [x] Configure production environment variables
+- [x] Configure production secrets
+- [x] Configure production CORS
+- [x] Configure Vercel SPA routing
+- [x] Verify live authentication
+- [x] Verify live account/customer flow
+- [x] Verify live backend connectivity
+- [x] Verify live frontend → Gateway → services → PostgreSQL architecture
+
+### Current deployment topology
+
+```text
+Vercel
+  └── React + TypeScript
+
+Render
+  ├── API Gateway
+  ├── Auth Service
+  ├── Account Service
+  └── Transaction Service
+
+Render PostgreSQL
+  ├── auth_db
+  ├── account_db
+  └── transaction_db
+```
+
+### Deployment notes
+
+- Render Free web services may sleep after inactivity.
+- Render Free PostgreSQL is temporary for this portfolio/demo deployment.
+- Backend images are published to Docker Hub and consumed by Render as public prebuilt images.
+- Local development continues to use `localhost` environment values.
+- Production secrets live only in Render/Vercel environment configuration.
 
 ## 5.3 README
 
-Complete and verify:
-
-- [ ] Project overview
-- [ ] Features
-- [ ] Architecture
-- [ ] Service responsibilities
-- [ ] Technology stack
-- [ ] Database layout
-- [ ] Authentication flow
-- [ ] Transaction flow
-- [ ] Idempotency explanation
-- [ ] Concurrency strategy
-- [ ] Audit logging
-- [ ] API overview
-- [ ] Local setup
-- [ ] Environment variables
-- [ ] Test instructions
-- [ ] Swagger/OpenAPI links
-- [ ] Screenshots
-- [ ] Architecture diagram
-- [ ] Future enhancements
+- [x] Project overview
+- [x] Features
+- [x] Architecture
+- [x] Service responsibilities
+- [x] Technology stack
+- [x] Database layout
+- [x] Authentication flow
+- [x] Transaction flow
+- [x] Idempotency explanation
+- [x] Concurrency strategy
+- [x] Audit logging
+- [x] API overview
+- [x] Local setup
+- [x] Environment variables
+- [x] Test instructions
+- [x] Swagger/OpenAPI links
+- [x] Deployment approach
+- [x] Current live URLs
+- [x] Known workflow gaps
+- [x] Future implementation priorities
 
 ## 5.4 API Documentation
 
@@ -770,40 +811,204 @@ Complete and verify:
 - [x] Account Swagger/OpenAPI
 - [x] Transaction Swagger/OpenAPI
 - [ ] Add final README links/examples
-- [ ] Document Gateway URLs
-- [ ] Document representative request/response examples
-- [ ] Document error response conventions
+- [x] Gateway URLs
+- [ ] Add representative request/response examples
+- [x] Document error response conventions
 
 ## 5.5 Git / Repository Cleanup
 
 - [x] Feature branches used
 - [x] Meaningful commits
 - [x] Pull requests used
-- [x] Frontend branch pushed and PR raised to `develop`
-- [x] `.env` contains only public local frontend URL
-- [ ] Final `.gitignore` review
-- [ ] Secret scan / repository review
+- [x] Docker deployment branch merged to `develop`
+- [x] `develop` promoted to `main`
+- [x] `.env` kept out of Git
+- [x] `target/` JARs kept out of Git
+- [x] `.idea/` secrets/workspace data excluded
+- [x] Final `.gitignore` reviewed
+- [ ] Final secret scan / repository review
 - [ ] Remove obsolete files
 - [ ] Remove unused dependencies
 - [ ] Remove dead code
-- [ ] Confirm clean `git status`
+- [ ] Confirm clean `git status` after final v2 changes
 
 ## 5.6 Screenshots / Portfolio Assets
 
-- [ ] Login
-- [ ] Dashboard
+- [x] Dashboard screenshot
+- [x] Admin dashboard screenshot
+- [ ] Login / registration
 - [ ] Accounts
 - [ ] Beneficiaries
 - [ ] Transfer result
 - [ ] Transaction history
 - [ ] Analytics
-- [ ] Admin dashboard
 - [ ] Swagger
-- [ ] Architecture diagram
+- [ ] Live Vercel deployment
+- [ ] Optional architecture illustration
 
 ---
 
-# 6. Optional Advanced Features
+# PHASE 6 — CORE WORKFLOW REFINEMENT / V2 ⏳
+
+> These are **basic product requirements**, not optional technology additions.
+> Address these before expanding the platform with Redis, Kafka, notifications, or other advanced features.
+
+## 6.1 Account Funding & Opening Balance
+
+Current gap:
+
+- [ ] Newly opened account starts at `0.00` with no user-facing funding path
+- [ ] Add a controlled account-funding/deposit workflow
+- [ ] Decide whether an opening balance is allowed during account creation
+- [ ] Validate funding amount
+- [ ] Record balance-changing funding transactions
+- [ ] Audit account-funding operations
+- [ ] Prevent direct database updates from being part of the normal user workflow
+- [ ] Add clear UI feedback after funding
+
+Expected workflow:
+
+```text
+Open Account
+     ↓
+Funding / Opening Balance
+     ↓
+Available Balance
+     ↓
+Transfer
+```
+
+## 6.2 Failed Transaction Semantics
+
+Current gap:
+
+- [ ] Frontend blocks an insufficient-balance transfer before submission
+- [ ] Preserve useful client-side validation
+- [ ] Ensure meaningful backend business failures can still produce a `FAILED` transaction where appropriate
+- [ ] Persist `TRANSFER_FAILED`
+- [ ] Persist failure message/status/reference
+- [ ] Do not alter balances when the transfer fails
+- [ ] Show a consistent failure result in the UI
+- [ ] Add a UI/API test for a backend-reachable failed transfer
+
+Expected workflow:
+
+```text
+Transfer Attempt
+      ↓
+Client Validation
+      ↓
+Backend Validation
+      ↓
+FAILED or COMPLETED
+      ↓
+Transaction + Audit
+```
+
+## 6.3 Onboarding / Missing Profile Handling
+
+Current gap:
+
+- [ ] `/api/customers/me` returning 404 for a new user currently appears as a generic dashboard error
+- [ ] Treat missing profile as an onboarding state
+- [ ] Show "Create your customer profile" action
+- [ ] After profile creation, guide user to account creation
+- [ ] Treat "no accounts" as an empty state rather than an infrastructure error
+- [ ] Disable transfer actions with a clear reason until prerequisites exist
+
+Expected workflow:
+
+```text
+Register
+  ↓
+Login
+  ↓
+Create Profile
+  ↓
+Open Account
+  ↓
+Fund Account
+  ↓
+Add Beneficiary
+  ↓
+Transfer
+```
+
+## 6.4 Account Lifecycle
+
+- [ ] Define account creation state clearly
+- [ ] Validate account activation
+- [ ] Prevent transfers from inactive/frozen/closed accounts
+- [ ] Add freeze/deactivate/close workflow where appropriate
+- [ ] Define whether closed accounts can retain history
+- [ ] Display lifecycle state consistently in UI
+
+## 6.5 Basic Money-Movement Coverage
+
+- [ ] Deposit/funding workflow
+- [ ] Withdrawal/debit workflow where appropriate
+- [ ] Business validation for funding/withdrawal
+- [ ] Audit every balance-changing operation
+- [ ] Maintain transaction references for balance-changing operations
+- [ ] Keep all balance mutations concurrency-safe
+
+## 6.6 Transaction UX
+
+- [ ] Detailed transaction view
+- [ ] Clear sender/receiver labels
+- [ ] Amount and currency formatting
+- [ ] Timestamp formatting
+- [ ] Success/failure reason display
+- [ ] Transaction reference copy action
+- [ ] Basic date filtering
+- [ ] Basic status filtering
+- [ ] Basic type filtering
+- [ ] Optional pagination once history grows
+
+## 6.7 Reliability / Deployment UX
+
+- [ ] Detect retryable 502/503 responses from sleeping services
+- [ ] Show "Service waking up" / retry-friendly messaging
+- [ ] Avoid presenting temporary cold-start failures as permanent banking errors
+- [ ] Add bounded retry behavior where appropriate
+- [ ] Ensure idempotent requests remain safe during client retries
+- [ ] Verify refresh/retry flow against live cold starts
+
+## 6.8 Banking UI / Product Polish
+
+- [ ] Banking-themed login/registration background or hero treatment
+- [ ] Clear product title/branding
+- [ ] Consistent currency/number formatting
+- [ ] Consistent account-card hierarchy
+- [ ] Clear action emphasis for deposit/funding/transfer
+- [ ] Confirmation before high-impact operations
+- [ ] Better receipt/result presentation
+- [ ] Consistent mobile experience across core flows
+- [ ] Accessibility review for forms and MUI controls
+
+## 6.9 Live Demo Data
+
+- [ ] Decide whether the demo uses seed data or guided onboarding
+- [ ] Provide a repeatable demo setup
+- [ ] Avoid relying on direct SQL balance changes for normal walkthroughs
+- [ ] Document any intentionally pre-seeded demo accounts
+- [ ] Keep production/demo credentials out of Git
+
+## 6.10 v2 Definition of Done
+
+- [ ] New users receive a clear onboarding path
+- [ ] New accounts can be funded without direct SQL edits
+- [ ] Successful transfer is reachable through the normal UI
+- [ ] A meaningful backend failure can produce a `FAILED` transaction
+- [ ] Every balance-changing operation is auditable
+- [ ] Failed operations do not mutate balances incorrectly
+- [ ] Account lifecycle rules are enforced
+- [ ] History provides basic filtering/detail capability
+- [ ] Live cold-start failures have a reasonable user experience
+- [ ] Login/registration has consistent portfolio-quality branding
+- [ ] Core workflows can be demonstrated from a fresh account without manual database manipulation
+
+# 7. Optional Advanced Features
 
 > Add these only after the core application and Phase 5 packaging are complete.
 
@@ -863,7 +1068,7 @@ Possible technology:
 
 ---
 
-# 7. Features Deliberately Excluded from MVP
+# 8. Features Deliberately Excluded from MVP
 
 Do not add these merely to increase the technology list:
 
@@ -881,7 +1086,36 @@ Do not add these merely to increase the technology list:
 
 ---
 
-# 8. Current API Surface
+
+## Current Live Deployment
+
+```text
+Frontend:
+https://digital-banking-platform-live.vercel.app
+
+Gateway:
+https://digital-banking-gateway-latest.onrender.com
+
+Auth:
+https://digital-banking-auth-latest.onrender.com
+
+Account:
+https://digital-banking-account-latest.onrender.com
+
+Transaction:
+https://digital-banking-transaction-latest.onrender.com
+```
+
+The deployed database is Render PostgreSQL with:
+
+```text
+auth_db
+account_db
+transaction_db
+```
+
+
+# 9. Current API Surface
 
 ## Auth Service
 
@@ -924,7 +1158,7 @@ GET  /api/admin/transaction-stats
 
 ---
 
-# 9. Important End-to-End Scenarios
+# 10. Important End-to-End Scenarios
 
 ## Scenario 1 — Registration & Login
 
@@ -1002,7 +1236,9 @@ No incorrect balance update
 Failure audited
 ```
 
-- [x] Verified
+- [x] Backend failure model implemented
+- [x] Audit failure model implemented
+- [ ] Frontend-reachable failed-transfer scenario needs refinement
 
 ## Scenario 5 — Duplicate Request
 
@@ -1051,7 +1287,7 @@ Retry original request
 
 ---
 
-# 10. Definition of Done
+# 11. Definition of Done
 
 ## Core Application
 
@@ -1077,15 +1313,22 @@ Retry original request
 
 ## Remaining Definition-of-Done Items
 
-- [ ] Docker Compose runs the complete system
-- [ ] README fully documents architecture/setup
-- [ ] Architecture diagram added
-- [ ] Screenshots added
-- [ ] Deployment-ready configuration reviewed
+The original Phase 5 packaging/deployment items are complete.
+
+The next definition of done belongs to **Phase 6 — Core Workflow Refinement**:
+
+- [ ] Account funding workflow
+- [ ] Reachable failed transaction UX
+- [ ] Guided onboarding for missing profiles/accounts
+- [ ] Account lifecycle rules
+- [ ] Auditable balance-changing operations
+- [ ] Basic transaction detail/filtering
+- [ ] Better cold-start/retry UX
+- [ ] Final banking UI polish
 
 ---
 
-# 11. Core Interview Topics to Master
+# 12. Core Interview Topics to Master
 
 ## Authentication & Security
 
@@ -1153,7 +1396,7 @@ Retry original request
 
 ---
 
-# 12. Resume-Focused Outcome
+# 13. Resume-Focused Outcome
 
 The completed core project demonstrates:
 
@@ -1183,14 +1426,14 @@ The completed core project demonstrates:
 
 ---
 
-# 13. Final Priority Order
+# 14. Final Priority Order
 
 ## Priority 1 — Must Be Excellent
 
 1. Authentication & Spring Security ✅
-2. Account management ✅
+2. Account ownership ✅
 3. Transfer business logic ✅
-4. Balance validation ✅
+4. Balance consistency ✅
 5. Transaction lifecycle ✅
 6. Idempotency ✅
 7. Concurrency/consistency ✅
@@ -1206,23 +1449,35 @@ The completed core project demonstrates:
 14. Recharts analytics ✅
 15. API Gateway ✅
 16. Swagger/OpenAPI ✅
+17. Local Docker Compose deployment ✅
+18. Render backend deployment ✅
+19. Vercel frontend deployment ✅
 
-## Priority 3 — Remaining Packaging / Optional Work
+## Priority 3 — Next Version: Core Workflow Refinement
 
-17. Docker Compose ⏳
-18. Final README + screenshots ⏳
-19. Deployment ⏳
-20. Redis
-21. Notifications
-22. Kafka
-23. Rate limiting
-24. Statements
-25. Scheduled transfers
-26. GitHub Actions
+20. Account funding / opening balance
+21. Reachable failed-transaction workflow
+22. Guided onboarding
+23. Account lifecycle management
+24. Basic deposit/withdrawal coverage
+25. Transaction detail/filtering
+26. Cold-start/retry UX
+27. Banking-themed auth screens
+28. Live demo setup / seed-data strategy
 
----
+## Priority 4 — Advanced / Optional
 
-# 14. Golden Rule for This Project
+29. Testcontainers
+30. Browser E2E automation
+31. Redis
+32. Notifications
+33. Kafka
+34. Rate limiting
+35. Statements
+36. Scheduled transfers
+37. GitHub Actions CI/CD
+
+# 15. Golden Rule for This Project
 
 > **Do not add technology unless it solves a real requirement.**
 
