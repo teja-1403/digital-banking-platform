@@ -553,8 +553,13 @@ Phase 1 — Authentication & Security        ✅
 Phase 2 — Account Management               ✅
 Phase 3 — Transaction Engine               ✅
 Phase 4 — Frontend Integration             ✅
-Phase 5 — Docker / Deployment / Final Docs ⏳
+Phase 5 — Docker / Deployment              ✅
+Phase 6 — Workflow Refinement / v2         ⏳
 ```
+
+The current version is deployed as a portfolio/demo application. Phase 5 completed local Dockerization, Render backend deployment, Render PostgreSQL deployment, Vercel frontend deployment, production CORS configuration, and live integration verification.
+
+The next planned iteration focuses on **core banking workflow completeness and UX correctness**, not adding unrelated technologies.
 
 The core full-stack banking application is complete.
 
@@ -564,27 +569,29 @@ Remaining work is primarily packaging, deployment readiness, final documentation
 
 The project uses feature branches and pull requests.
 
-Completed feature branches include:
+Typical flow:
 
 ```text
-feature/account-management
-feature/transaction-engine
-feature/frontend-integration
-```
-
-Each major phase was developed separately and merged into:
-
-```text
+feature/<work>
+      ↓ PR
 develop
+      ↓ PR
+main
 ```
+
+Major completed work was developed through feature branches and merged through pull requests.
+
+The Docker/deployment work followed the same process and was merged into `develop` before the final production deployment.
 
 ## Screenshots
 
-Add screenshots here for:
+Current portfolio evidence includes the dashboard and admin dashboard.
+
+Recommended final screenshot set for a polished portfolio README:
 
 ```text
-- Login
-- Dashboard
+- Login / registration
+- Customer dashboard
 - Accounts
 - Beneficiaries
 - Transfer result
@@ -592,23 +599,136 @@ Add screenshots here for:
 - Analytics
 - Admin dashboard
 - Swagger UI
+- Live deployment overview
 ```
+
+A dedicated architecture diagram is intentionally omitted for now; the README architecture section is the source of truth.
+
+## Known Workflow Gaps & Planned v2 Refinement
+
+The current release demonstrates the core banking architecture, but a few **basic workflow behaviors** should be refined before treating the application as a more complete digital-banking product.
+
+### Account Funding
+
+Newly opened accounts currently start with a zero balance. This is technically consistent with account creation, but it makes the first real transfer workflow impossible unless test data is manually funded.
+
+Planned refinement:
+
+```text
+Account opened
+      ↓
+Opening balance / funding workflow
+      ↓
+Available balance
+      ↓
+Transfer becomes immediately usable
+```
+
+A proper funding mechanism should be explicitly designed and audited rather than relying on direct database updates for demonstrations.
+
+### Failed Transaction Reachability
+
+The backend supports `FAILED` transactions and audit events, but the current frontend prevents an insufficient-balance transfer before it reaches the backend.
+
+Planned refinement:
+
+```text
+Client validation
+      ↓
+Backend business validation
+      ↓
+Persist FAILED transaction when appropriate
+      ↓
+Persist TRANSFER_FAILED audit event
+      ↓
+Display failure outcome to user
+```
+
+The UI should retain useful client-side validation while still allowing meaningful backend failure paths to be exercised and represented consistently.
+
+### Onboarding / Empty-State Flow
+
+A newly authenticated user without a customer profile currently produces resource-not-found responses that can surface as generic loading/error states.
+
+Planned refinement:
+
+```text
+Authenticated user
+      ↓
+No customer profile?
+      ↓
+Show onboarding prompt
+      ↓
+Create customer profile
+      ↓
+Open account
+```
+
+The same principle should be applied to accounts, beneficiaries, and transfer readiness.
+
+### Live / Demo Data
+
+The portfolio deployment currently uses separate cloud data from local development. A clean demo should provide either:
+
+- a guided onboarding/funding path,
+- safe seed/demo data,
+- or a clearly documented demo setup procedure.
+
+Direct SQL balance changes should remain a development/testing technique, not the normal user workflow.
+
+### Basic Banking Product Completeness
+
+Before adding advanced technologies, the next release should consider these core capabilities where appropriate:
+
+- Account funding / deposit flow
+- Withdrawal or debit workflow with appropriate business rules
+- Clear account lifecycle states
+- Account activation / closure handling
+- Standard transaction failure semantics
+- Better transfer failure messaging
+- User-friendly onboarding for incomplete profiles
+- Consistent confirmation and receipt information
+- Stronger transaction detail view
+- Basic statement/history filtering
+- Basic account and beneficiary presentation polish
+- Auditability for balance-changing operations
 
 ## Future Enhancements
 
-These are intentionally outside the current core scope:
+### Core Workflow Refinement — next version
 
-- Docker Compose
-- Production deployment
+These are the next priorities because they improve the **basic banking workflow**, not because they add more technology:
+
+- Account funding / opening-balance workflow
+- Backend-reachable failed transaction scenario
+- Better failed-transfer and business-error UX
+- Guided onboarding when customer/profile data is missing
+- Account lifecycle improvements: activate, freeze, close where appropriate
+- Basic deposit/withdrawal support with auditability
+- Clear transaction detail / receipt view
+- Basic transaction filters by date, status, and type
+- Better live/demo data setup
+- Consistent empty/loading/error states across all banking pages
+- Mobile-friendly polish for the most important banking flows
+- Login/register visual branding such as a banking-themed background or hero treatment
+- Production-friendly handling of Render cold starts and retryable 502/503 responses
+- User-facing confirmation for high-impact operations
+- Clear balance update feedback after transfers
+
+### Advanced / optional
+
+Only consider these after the core workflow is reliable:
+
 - Redis caching
 - Rate limiting
-- Email notifications
+- Email/SMS notifications
 - Kafka/event-driven processing
-- Account statements
+- Account statements and exports
 - Scheduled transfers
 - GitHub Actions CI/CD
-
-These should only be added when they solve a meaningful requirement.
+- Full browser end-to-end automation
+- Testcontainers
+- Stronger observability/metrics
 
 ## Resume-Level Summary
 
