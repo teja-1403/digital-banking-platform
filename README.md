@@ -597,30 +597,35 @@ Authentication screen for existing users to log in securely using credentials.
 
 ### 3. Customer Dashboard
 Overview screen showing total balance, transaction summary, active accounts, transaction analytics charts, and recent activity.
+
 ![Customer Dashboard](image-2.png)
 
 ---
 
 ### 4. Account Management
 View of registered user accounts showing account types (Savings/Current), active status, and available balances with options to open new accounts.
+
 ![Account Management](image-3.png)
 
 ---
 
 ### 5. Beneficiary Management
 List of saved payees/beneficiaries with account numbers, creation timestamps, and management options.
+
 ![Beneficiary Management](image-4.png)
 
 ---
 
 ### 6. Transfer Flow & Validation
 Money transfer interface showing source account selection, beneficiary destination, and client-side balance validation handling insufficient funds.
+
 ![Transfer Flow](image-5.png)
 
 ---
 
 ### 7. Transaction History
 Detailed, sortable list of account-level transfers displaying references, transaction types, descriptions, amounts, and statuses.
+
 ![Transaction History](image-6.png)
 
 ## Known Workflow Gaps & Planned v2 Refinement
