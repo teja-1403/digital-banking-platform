@@ -2,7 +2,7 @@
 
 Full-stack banking platform with secure authentication, microservices, transaction processing, audit logging, and financial analytics.
 
-> **Note:** This project is an educational/portfolio application and is not intended for production banking or financial transactions.
+> **Note:** This project is an educational application and is not intended for production banking or financial transactions.
 
 ## Overview
 
@@ -563,8 +563,6 @@ The next planned iteration focuses on **core banking workflow completeness and U
 
 The core full-stack banking application is complete.
 
-Remaining work is primarily packaging, deployment readiness, final documentation, architecture diagrams, screenshots, and optional advanced features.
-
 ## Git Workflow
 
 The project uses feature branches and pull requests.
@@ -585,24 +583,45 @@ The Docker/deployment work followed the same process and was merged into `develo
 
 ## Screenshots
 
-Current portfolio evidence includes the dashboard and admin dashboard.
+### 1. User Registration
+User sign-up screen with username, email, and password fields under the SecureBank portal.
+![User Registration](image.png)
 
-Recommended final screenshot set for a polished portfolio README:
+---
 
-```text
-- Login / registration
-- Customer dashboard
-- Accounts
-- Beneficiaries
-- Transfer result
-- Transaction history
-- Analytics
-- Admin dashboard
-- Swagger UI
-- Live deployment overview
-```
+### 2. User Sign In
+Authentication screen for existing users to log in securely using credentials.
+![User Sign In](image-1.png)
 
-A dedicated architecture diagram is intentionally omitted for now; the README architecture section is the source of truth.
+---
+
+### 3. Customer Dashboard
+Overview screen showing total balance, transaction summary, active accounts, transaction analytics charts, and recent activity.
+![Customer Dashboard](image-2.png)
+
+---
+
+### 4. Account Management
+View of registered user accounts showing account types (Savings/Current), active status, and available balances with options to open new accounts.
+![Account Management](image-3.png)
+
+---
+
+### 5. Beneficiary Management
+List of saved payees/beneficiaries with account numbers, creation timestamps, and management options.
+![Beneficiary Management](image-4.png)
+
+---
+
+### 6. Transfer Flow & Validation
+Money transfer interface showing source account selection, beneficiary destination, and client-side balance validation handling insufficient funds.
+![Transfer Flow](image-5.png)
+
+---
+
+### 7. Transaction History
+Detailed, sortable list of account-level transfers displaying references, transaction types, descriptions, amounts, and statuses.
+![Transaction History](image-6.png)
 
 ## Known Workflow Gaps & Planned v2 Refinement
 
@@ -730,13 +749,7 @@ Only consider these after the core workflow is reliable:
 - Testcontainers
 - Stronger observability/metrics
 
-## Resume-Level Summary
-
-**Digital Banking Platform** — Built a secure full-stack banking platform using Java, Spring Boot, React, TypeScript, JWT, PostgreSQL, and microservices, supporting customer/account management, beneficiaries, money transfers, transaction history, audit logging, role-based admin monitoring, and financial analytics. Implemented idempotent transfer processing, concurrency-safe balance updates, service-to-service authentication, automated backend/frontend testing, API Gateway routing, and Swagger/OpenAPI documentation.
-
 ## Project Principle
-
-> **Do not add technology unless it solves a real requirement.**
 
 The value of this project is in being able to explain:
 
@@ -744,6 +757,6 @@ The value of this project is in being able to explain:
 
 ---
 
-**Educational/Portfolio Disclaimer**
+**Educational Disclaimer**
 
-This project is an educational/portfolio application and is not intended for production banking or financial transactions.
+This project is an educational application and is not intended for production banking or financial transactions.
