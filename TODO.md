@@ -29,7 +29,7 @@ The next version should focus on **basic banking workflow completeness and corre
 
 **Digital Banking Platform**
 
-## One-Line Description
+## Description
 
 A secure digital banking platform where customers can register, manage customer profiles and bank accounts, manage beneficiaries, transfer money, view transaction history, analyze financial activity, while administrators can monitor platform-wide statistics.
 
@@ -718,7 +718,7 @@ Critical tests implemented:
 
 # PHASE 5 — DOCKER, DEPLOYMENT & FINAL DOCUMENTATION ✅
 
-> Local containerization and the portfolio deployment are complete.
+> Local containerization and deployment are complete.
 
 ## 5.1 Docker
 
@@ -830,21 +830,21 @@ Render PostgreSQL
 - [ ] Remove obsolete files
 - [ ] Remove unused dependencies
 - [ ] Remove dead code
-- [ ] Confirm clean `git status` after final v2 changes
+- [x] Confirm clean `git status` after final v2 changes
 
 ## 5.6 Screenshots / Portfolio Assets
 
 - [x] Dashboard screenshot
 - [x] Admin dashboard screenshot
-- [ ] Login / registration
-- [ ] Accounts
-- [ ] Beneficiaries
-- [ ] Transfer result
-- [ ] Transaction history
-- [ ] Analytics
-- [ ] Swagger
-- [ ] Live Vercel deployment
-- [ ] Optional architecture illustration
+- [x] Login / registration
+- [x] Accounts
+- [x] Beneficiaries
+- [x] Transfer result
+- [x] Transaction history
+- [x] Analytics
+- [x] Swagger
+- [x] Live Vercel deployment
+- [] Optional architecture illustration
 
 ---
 
@@ -1328,7 +1328,7 @@ The next definition of done belongs to **Phase 6 — Core Workflow Refinement**:
 
 ---
 
-# 12. Core Interview Topics to Master
+# 12. Topics to Master
 
 ## Authentication & Security
 
@@ -1396,7 +1396,7 @@ The next definition of done belongs to **Phase 6 — Core Workflow Refinement**:
 
 ---
 
-# 13. Resume-Focused Outcome
+# 13. Outcome
 
 The completed core project demonstrates:
 
@@ -1420,64 +1420,9 @@ The completed core project demonstrates:
 - Frontend critical-path testing
 - Swagger/OpenAPI documentation
 
-## Strong Resume-Level Project Description
-
-> **Digital Banking Platform** — Built a secure full-stack banking platform using Java, Spring Boot, React, TypeScript, JWT, PostgreSQL, and microservices, supporting customer/account management, beneficiaries, money transfers, transaction history, audit logging, role-based admin monitoring, and financial analytics. Implemented idempotent transfer processing, concurrency-safe balance updates, service-to-service authentication, automated backend/frontend testing, API Gateway routing, and Swagger/OpenAPI documentation.
-
 ---
 
-# 14. Final Priority Order
-
-## Priority 1 — Must Be Excellent
-
-1. Authentication & Spring Security ✅
-2. Account ownership ✅
-3. Transfer business logic ✅
-4. Balance consistency ✅
-5. Transaction lifecycle ✅
-6. Idempotency ✅
-7. Concurrency/consistency ✅
-8. REST API quality ✅
-9. Testing ✅
-
-## Priority 2 — Completed Core Product
-
-10. React dashboard ✅
-11. Admin dashboard ✅
-12. Transaction history ✅
-13. Audit logging ✅
-14. Recharts analytics ✅
-15. API Gateway ✅
-16. Swagger/OpenAPI ✅
-17. Local Docker Compose deployment ✅
-18. Render backend deployment ✅
-19. Vercel frontend deployment ✅
-
-## Priority 3 — Next Version: Core Workflow Refinement
-
-20. Account funding / opening balance
-21. Reachable failed-transaction workflow
-22. Guided onboarding
-23. Account lifecycle management
-24. Basic deposit/withdrawal coverage
-25. Transaction detail/filtering
-26. Cold-start/retry UX
-27. Banking-themed auth screens
-28. Live demo setup / seed-data strategy
-
-## Priority 4 — Advanced / Optional
-
-29. Testcontainers
-30. Browser E2E automation
-31. Redis
-32. Notifications
-33. Kafka
-34. Rate limiting
-35. Statements
-36. Scheduled transfers
-37. GitHub Actions CI/CD
-
-# 15. Golden Rule for This Project
+# 14. Golden Rule for This Project
 
 > **Do not add technology unless it solves a real requirement.**
 
