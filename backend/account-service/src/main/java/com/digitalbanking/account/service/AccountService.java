@@ -188,6 +188,10 @@ public class AccountService {
         );
     }
 
+    public boolean hasFundingForUser(Long userId) {
+        return accountFundingRepository.existsByUserId(userId);
+    }
+
     private String generateUniqueFundingReference() {
 
         String reference;

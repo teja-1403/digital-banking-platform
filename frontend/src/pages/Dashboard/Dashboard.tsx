@@ -1,6 +1,7 @@
 import {
   Alert,
   Box,
+  Button,
   Card,
   CardContent,
   Chip,
@@ -12,6 +13,7 @@ import {
 } from "@mui/material";
 
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 import {
   Bar,
@@ -24,17 +26,16 @@ import {
   YAxis,
 } from "recharts";
 
-import { getAccounts } from "../../api/accountApi";
+import { getAccounts, getFundingStatus } from "../../api/accountApi";
 import { getCurrentCustomer } from "../../api/customerApi";
+import { getBeneficiaries } from "../../api/beneficiaryApi";
 import { getAccountTransactions } from "../../api/transactionApi";
 
 import type { Account } from "../../types/account";
 import type { Customer } from "../../types/customer";
 import type { TransactionResponse } from "../../types/transaction";
 
-import {
-  getTransactionSummary,
-} from "../../utils/transactionAnalytics";
+import { getTransactionSummary } from "../../utils/transactionAnalytics";
 
 export default function Dashboard() {
   const [customer, setCustomer] = useState<Customer | null>(null);
@@ -47,19 +48,60 @@ export default function Dashboard() {
 
   const [error, setError] = useState("");
 
+  const [hasFunding, setHasFunding] = useState(false);
+
+  const [beneficiaryCount, setBeneficiaryCount] = useState(0);
+
+  const navigate = useNavigate();
+
   useEffect(() => {
     const loadDashboard = async () => {
       setIsLoading(true);
       setError("");
 
       try {
-        const [customerData, accountData] = await Promise.all([
-          getCurrentCustomer(),
-          getAccounts(),
-        ]);
+        let customerData: Customer | null = null;
+
+        try {
+          customerData = await getCurrentCustomer();
+        } catch (err: any) {
+          /*
+           * A newly registered authenticated user may not
+           * have a customer profile yet.
+           *
+           * Treat 404 as an onboarding state instead
+           * of showing a generic dashboard error.
+           */
+          if (err?.response?.status !== 404) {
+            throw err;
+          }
+        }
+
+        /*
+         * No customer profile yet.
+         *
+         * Keep the dashboard usable so onboarding can
+         * guide the user to the Accounts page where the
+         * existing profile dialog is displayed.
+         */
+        if (!customerData) {
+          setCustomer(null);
+          setAccounts([]);
+          setTransactions([]);
+          setHasFunding(false);
+          setBeneficiaryCount(0);
+          return;
+        }
 
         setCustomer(customerData);
+
+        const [accountData, fundingStatus, beneficiaryData] = await Promise.all(
+          [getAccounts(), getFundingStatus(), getBeneficiaries()],
+        );
+
         setAccounts(accountData);
+        setHasFunding(fundingStatus);
+        setBeneficiaryCount(beneficiaryData.length);
 
         /*
          * Load transaction history for all of the
@@ -162,6 +204,65 @@ export default function Dashboard() {
 
   const recentTransactions = transactions.slice(0, 5);
 
+  const profileComplete = customer !== null;
+
+  const accountCreated = accounts.length > 0;
+
+  const firstTransferCompleted = transactions.some(
+    (transaction) =>
+      transaction.status === "COMPLETED" &&
+      accounts.some((account) => account.id === transaction.sourceAccountId),
+  );
+
+  const onboardingSteps = [
+    {
+      key: "profile",
+      label: "Complete your profile",
+      description: "Add your personal details.",
+      completed: profileComplete,
+      path: "/accounts",
+      action: "Complete profile",
+    },
+    {
+      key: "account",
+      label: "Open an account",
+      description: "Open your first Savings or Current account.",
+      completed: accountCreated,
+      path: "/accounts",
+      action: "Open account",
+    },
+    {
+      key: "funding",
+      label: "Fund an account",
+      description: "Add funds so you can make transfers.",
+      completed: hasFunding,
+      path: "/accounts",
+      action: "Fund account",
+    },
+    {
+      key: "beneficiary",
+      label: "Add a beneficiary",
+      description: "Add a recipient account for transfers.",
+      completed: beneficiaryCount > 0,
+      path: "/beneficiaries",
+      action: "Add beneficiary",
+    },
+    {
+      key: "transfer",
+      label: "Make your first transfer",
+      description: "Complete your first successful transfer.",
+      completed: firstTransferCompleted,
+      path: "/transfer",
+      action: "Make transfer",
+    },
+  ];
+
+  const nextOnboardingIndex = onboardingSteps.findIndex(
+    (step) => !step.completed,
+  );
+
+  const onboardingComplete = nextOnboardingIndex === -1;
+
   if (isLoading) {
     return (
       <Box
@@ -184,12 +285,94 @@ export default function Dashboard() {
   return (
     <Box>
       <Typography variant="h4" gutterBottom>
-        Welcome, {customer?.firstName}
+        {customer ? `Welcome, ${customer.firstName}` : "Welcome to SecureBank"}
       </Typography>
 
       <Typography color="text.secondary" sx={{ mb: 3 }}>
         Here's an overview of your banking activity.
       </Typography>
+
+      {!onboardingComplete && (
+        <Card sx={{ mb: 3 }}>
+          <CardContent>
+            <Typography variant="h5">Complete your banking setup</Typography>
+
+            <Typography color="text.secondary" sx={{ mt: 0.5, mb: 2 }}>
+              Follow these steps to get your account ready for everyday banking.
+            </Typography>
+
+            <Stack spacing={1.5}>
+              {onboardingSteps.map((step, index) => {
+                const isNextStep = index === nextOnboardingIndex;
+
+                return (
+                  <Box
+                    key={step.key}
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 2,
+                      p: 1.5,
+                      borderRadius: 2,
+                      border: "1px solid",
+                      borderColor: isNextStep ? "primary.main" : "divider",
+                      bgcolor: step.completed
+                        ? "action.hover"
+                        : "background.paper",
+                    }}
+                  >
+                    <Typography
+                      sx={{
+                        minWidth: 28,
+                        fontSize: "1.2rem",
+                        fontWeight: 700,
+                        color: step.completed
+                          ? "success.main"
+                          : isNextStep
+                            ? "primary.main"
+                            : "text.disabled",
+                      }}
+                    >
+                      {step.completed ? "✓" : isNextStep ? "→" : "○"}
+                    </Typography>
+
+                    <Box sx={{ flex: 1 }}>
+                      <Typography
+                        sx={{
+                          fontWeight: 600,
+                        }}
+                      >
+                        {step.label}
+                      </Typography>
+
+                      <Typography variant="body2" color="text.secondary">
+                        {step.description}
+                      </Typography>
+                    </Box>
+
+                    {isNextStep && (
+                      <Button
+                        variant="contained"
+                        size="small"
+                        onClick={() => navigate(step.path)}
+                      >
+                        {step.action}
+                      </Button>
+                    )}
+                  </Box>
+                );
+              })}
+            </Stack>
+          </CardContent>
+        </Card>
+      )}
+
+      {onboardingComplete && (
+        <Alert severity="success" sx={{ mb: 3 }}>
+          Your banking setup is complete. You're ready to use all core banking
+          features.
+        </Alert>
+      )}
 
       <Grid container spacing={2}>
         <Grid size={{ xs: 12, md: 6 }}>

@@ -91,4 +91,15 @@ public class AccountController {
 
         return ResponseEntity.ok(response);
     }
+
+    @GetMapping("/funding-status")
+    public ResponseEntity<Boolean> getFundingStatus(
+            @AuthenticationPrincipal Jwt jwt) {
+
+        Long userId = authenticatedUser.getUserId(jwt);
+
+        return ResponseEntity.ok(
+                accountService.hasFundingForUser(userId)
+        );
+    }
 }
