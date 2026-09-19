@@ -11,4 +11,6 @@ public interface AccountFundingRepository
     Optional<AccountFunding> findByFundingReference(String fundingReference);
 
     boolean existsByFundingReference(String fundingReference);
+
+    boolean existsByUserId(Long userId);
 }

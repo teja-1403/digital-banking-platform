@@ -45,3 +45,11 @@ export const fundAccount = async (
 
   return response.data;
 };
+
+export const getFundingStatus = async (): Promise<boolean> => {
+  const response = await axiosClient.get<boolean>(
+    "/api/accounts/funding-status",
+  );
+
+  return response.data;
+};
