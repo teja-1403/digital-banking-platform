@@ -21,7 +21,14 @@ import {
 
 import { useEffect, useState } from "react";
 
-import { createAccount, fundAccount, getAccounts } from "../../api/accountApi";
+import {
+  activateAccount,
+  closeAccount,
+  createAccount,
+  freezeAccount,
+  fundAccount,
+  getAccounts,
+} from "../../api/accountApi";
 
 import { getCurrentCustomer } from "../../api/customerApi";
 
@@ -63,6 +70,18 @@ export default function Accounts() {
   const [fundingError, setFundingError] = useState("");
 
   const [fundingSuccess, setFundingSuccess] = useState("");
+
+  const [lifecycleAccount, setLifecycleAccount] = useState<Account | null>(
+    null,
+  );
+
+  const [lifecycleAction, setLifecycleAction] = useState<
+    "FREEZE" | "CLOSE" | "ACTIVATE" | null
+  >(null);
+
+  const [isUpdatingLifecycle, setIsUpdatingLifecycle] = useState(false);
+
+  const [lifecycleError, setLifecycleError] = useState("");
 
   const loadData = async () => {
     setIsLoading(true);
@@ -172,6 +191,51 @@ export default function Accounts() {
     }
   };
 
+  const openLifecycleDialog = (
+    account: Account,
+    action: "FREEZE" | "CLOSE" | "ACTIVATE",
+  ) => {
+    setLifecycleAccount(account);
+    setLifecycleAction(action);
+    setLifecycleError("");
+  };
+
+  const handleLifecycleAction = async () => {
+    if (!lifecycleAccount || !lifecycleAction) {
+      return;
+    }
+
+    setLifecycleError("");
+    setIsUpdatingLifecycle(true);
+
+    try {
+      let updatedAccount: Account;
+
+      if (lifecycleAction === "FREEZE") {
+        updatedAccount = await freezeAccount(lifecycleAccount.id);
+      } else if (lifecycleAction === "ACTIVATE") {
+        updatedAccount = await activateAccount(lifecycleAccount.id);
+      } else {
+        updatedAccount = await closeAccount(lifecycleAccount.id);
+      }
+
+      setAccounts((current) =>
+        current.map((account) =>
+          account.id === updatedAccount.id ? updatedAccount : account,
+        ),
+      );
+
+      setLifecycleAccount(null);
+      setLifecycleAction(null);
+    } catch (error) {
+      setLifecycleError(
+        getApiErrorMessage(error, "Unable to update the account status."),
+      );
+    } finally {
+      setIsUpdatingLifecycle(false);
+    }
+  };
+
   const handleProfileCreated = async () => {
     setProfileDialogOpen(false);
     await loadData();
@@ -273,7 +337,14 @@ export default function Accounts() {
                 <Typography variant="h5">
                   {account.currency} {account.balance.toFixed(2)}
                 </Typography>
-                <Box sx={{ mt: 2 }}>
+                <Box
+                  sx={{
+                    mt: 2,
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: 1,
+                  }}
+                >
                   <Button
                     variant="outlined"
                     fullWidth
@@ -288,6 +359,39 @@ export default function Accounts() {
                   >
                     Fund Account
                   </Button>
+
+                  {account.status === "ACTIVE" && (
+                    <>
+                      <Button
+                        variant="outlined"
+                        color="warning"
+                        fullWidth
+                        onClick={() => openLifecycleDialog(account, "FREEZE")}
+                      >
+                        Freeze Account
+                      </Button>
+
+                      <Button
+                        variant="outlined"
+                        color="error"
+                        fullWidth
+                        onClick={() => openLifecycleDialog(account, "CLOSE")}
+                      >
+                        Close Account
+                      </Button>
+                    </>
+                  )}
+
+                  {account.status === "BLOCKED" && (
+                    <Button
+                      variant="outlined"
+                      color="success"
+                      fullWidth
+                      onClick={() => openLifecycleDialog(account, "ACTIVATE")}
+                    >
+                      Activate Account
+                    </Button>
+                  )}
                 </Box>
               </CardContent>
             </Card>
@@ -304,14 +408,14 @@ export default function Accounts() {
         )}
       </Grid>
 
-      <CustomerProfileDialog
-        open={profileDialogOpen}
-        onCreated={() => void handleProfileCreated()}
-      />
-
       <Dialog
         open={accountDialogOpen}
-        onClose={() => !isCreatingAccount && setAccountDialogOpen(false)}
+        onClose={() => {
+          if (!isCreatingAccount) {
+            setAccountDialogOpen(false);
+            setAccountError("");
+          }
+        }}
         fullWidth
         maxWidth="sm"
       >
@@ -325,17 +429,18 @@ export default function Accounts() {
           )}
 
           <FormControl fullWidth sx={{ mt: 1 }}>
-            <InputLabel>Account Type</InputLabel>
+            <InputLabel id="account-type-label">Account Type</InputLabel>
 
             <Select
+              labelId="account-type-label"
               value={accountType}
               label="Account Type"
               onChange={(event) =>
                 setAccountType(event.target.value as "SAVINGS" | "CURRENT")
               }
+              disabled={isCreatingAccount}
             >
               <MenuItem value="SAVINGS">Savings</MenuItem>
-
               <MenuItem value="CURRENT">Current</MenuItem>
             </Select>
           </FormControl>
@@ -343,7 +448,10 @@ export default function Accounts() {
 
         <DialogActions>
           <Button
-            onClick={() => setAccountDialogOpen(false)}
+            onClick={() => {
+              setAccountDialogOpen(false);
+              setAccountError("");
+            }}
             disabled={isCreatingAccount}
           >
             Cancel
@@ -354,24 +462,32 @@ export default function Accounts() {
             onClick={() => void handleCreateAccount()}
             disabled={isCreatingAccount}
           >
-            {isCreatingAccount ? "Creating..." : "Create Account"}
+            {isCreatingAccount ? (
+              <CircularProgress size={22} />
+            ) : (
+              "Open Account"
+            )}
           </Button>
         </DialogActions>
       </Dialog>
+
       <Dialog
         open={fundAccountDialogOpen}
-        onClose={() => !isFundingAccount && setFundAccountDialogOpen(false)}
+        onClose={() => {
+          if (!isFundingAccount) {
+            setFundAccountDialogOpen(false);
+            setFundingAccount(null);
+            setFundAmount("");
+            setFundingError("");
+            setFundingSuccess("");
+          }
+        }}
         fullWidth
         maxWidth="sm"
       >
         <DialogTitle>Fund Account</DialogTitle>
 
         <DialogContent>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            Demo funding for portfolio testing. This increases the selected
-            account balance without using a real payment provider.
-          </Typography>
-
           {fundingAccount && (
             <Alert severity="info" sx={{ mb: 2 }}>
               {fundingAccount.accountType} — {fundingAccount.accountNumber}
@@ -392,26 +508,30 @@ export default function Accounts() {
 
           <TextField
             fullWidth
-            autoFocus
             label="Funding Amount"
             value={fundAmount}
-            onChange={(event) => setFundAmount(event.target.value)}
-            placeholder="10000.00"
+            onChange={(event) => {
+              setFundAmount(event.target.value);
+              setFundingError("");
+              setFundingSuccess("");
+            }}
             type="text"
             inputMode="decimal"
+            placeholder="Enter amount"
             disabled={isFundingAccount}
-            slotProps={{
-              htmlInput: {
-                maxLength: 20,
-              },
-            }}
             sx={{ mt: 1 }}
           />
         </DialogContent>
 
         <DialogActions>
           <Button
-            onClick={() => setFundAccountDialogOpen(false)}
+            onClick={() => {
+              setFundAccountDialogOpen(false);
+              setFundingAccount(null);
+              setFundAmount("");
+              setFundingError("");
+              setFundingSuccess("");
+            }}
             disabled={isFundingAccount}
           >
             Close
@@ -420,9 +540,103 @@ export default function Accounts() {
           <Button
             variant="contained"
             onClick={() => void handleFundAccount()}
-            disabled={isFundingAccount}
+            disabled={isFundingAccount || !fundingAccount}
           >
-            {isFundingAccount ? "Funding..." : "Fund Account"}
+            {isFundingAccount ? <CircularProgress size={22} /> : "Fund Account"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <CustomerProfileDialog
+        open={profileDialogOpen}
+        onCreated={() => void handleProfileCreated()}
+      />
+
+      <Dialog
+        open={lifecycleAccount !== null && lifecycleAction !== null}
+        onClose={() => {
+          if (!isUpdatingLifecycle) {
+            setLifecycleAccount(null);
+            setLifecycleAction(null);
+            setLifecycleError("");
+          }
+        }}
+        fullWidth
+        maxWidth="sm"
+      >
+        <DialogTitle>
+          {lifecycleAction === "FREEZE"
+            ? "Freeze Account"
+            : lifecycleAction === "ACTIVATE"
+              ? "Activate Account"
+              : "Close Account"}
+        </DialogTitle>
+
+        <DialogContent>
+          {lifecycleAccount && (
+            <Alert severity="info" sx={{ mb: 2 }}>
+              {lifecycleAccount.accountType} — {lifecycleAccount.accountNumber}
+            </Alert>
+          )}
+
+          {lifecycleError && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {lifecycleError}
+            </Alert>
+          )}
+
+          <Typography>
+            {lifecycleAction === "FREEZE" &&
+              "Freezing this account will prevent funding and transfers until it is activated again."}
+
+            {lifecycleAction === "ACTIVATE" &&
+              "This will reactivate the account and allow normal banking operations again."}
+
+            {lifecycleAction === "CLOSE" &&
+              "This account will be permanently closed and cannot be reactivated."}
+          </Typography>
+
+          {lifecycleAction === "CLOSE" && lifecycleAccount?.balance !== 0 && (
+            <Alert severity="warning" sx={{ mt: 2 }}>
+              This account must have a zero balance before it can be closed.
+            </Alert>
+          )}
+        </DialogContent>
+
+        <DialogActions>
+          <Button
+            onClick={() => {
+              setLifecycleAccount(null);
+              setLifecycleAction(null);
+              setLifecycleError("");
+            }}
+            disabled={isUpdatingLifecycle}
+          >
+            Cancel
+          </Button>
+
+          <Button
+            variant="contained"
+            color={
+              lifecycleAction === "CLOSE"
+                ? "error"
+                : lifecycleAction === "FREEZE"
+                  ? "warning"
+                  : "success"
+            }
+            onClick={() => void handleLifecycleAction()}
+            disabled={
+              isUpdatingLifecycle ||
+              (lifecycleAction === "CLOSE" && lifecycleAccount?.balance !== 0)
+            }
+          >
+            {isUpdatingLifecycle
+              ? "Updating..."
+              : lifecycleAction === "FREEZE"
+                ? "Freeze Account"
+                : lifecycleAction === "ACTIVATE"
+                  ? "Activate Account"
+                  : "Close Account"}
           </Button>
         </DialogActions>
       </Dialog>

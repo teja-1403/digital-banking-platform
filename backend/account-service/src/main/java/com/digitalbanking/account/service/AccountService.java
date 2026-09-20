@@ -192,6 +192,109 @@ public class AccountService {
         return accountFundingRepository.existsByUserId(userId);
     }
 
+    @Transactional
+    public AccountResponse freezeAccount(
+            Long userId,
+            Long accountId
+    ) {
+
+        Account account = getOwnedAccountForLifecycle(userId, accountId);
+
+        if (account.getStatus() != AccountStatus.ACTIVE) {
+            throw new BusinessRuleException(
+                    "Only active accounts can be frozen"
+            );
+        }
+
+        account.setStatus(AccountStatus.BLOCKED);
+
+        Account savedAccount = accountRepository.save(account);
+
+        return toResponse(savedAccount);
+    }
+
+    @Transactional
+    public AccountResponse activateAccount(
+            Long userId,
+            Long accountId
+    ) {
+
+        Account account = getOwnedAccountForLifecycle(userId, accountId);
+
+        if (account.getStatus() != AccountStatus.BLOCKED) {
+            throw new BusinessRuleException(
+                    "Only blocked accounts can be activated"
+            );
+        }
+
+        account.setStatus(AccountStatus.ACTIVE);
+
+        Account savedAccount = accountRepository.save(account);
+
+        return toResponse(savedAccount);
+    }
+
+    @Transactional
+    public AccountResponse closeAccount(
+            Long userId,
+            Long accountId
+    ) {
+
+        Account account = getOwnedAccountForLifecycle(userId, accountId);
+
+        if (account.getStatus() == AccountStatus.BLOCKED) {
+            throw new BusinessRuleException(
+                    "Blocked accounts must be activated before they can be closed"
+            );
+        }
+
+        if (account.getStatus() != AccountStatus.ACTIVE) {
+            throw new BusinessRuleException(
+                    "Only active accounts can be closed"
+            );
+        }
+
+        if (account.getBalance().compareTo(BigDecimal.ZERO) != 0) {
+            throw new BusinessRuleException(
+                    "Account must have zero balance before it can be closed"
+            );
+        }
+
+        account.setStatus(AccountStatus.CLOSED);
+
+        Account savedAccount = accountRepository.save(account);
+
+        return toResponse(savedAccount);
+    }
+
+    private Account getOwnedAccountForLifecycle(
+            Long userId,
+            Long accountId
+    ) {
+
+        Customer customer = customerRepository.findByUserId(userId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Customer profile not found"
+                        )
+                );
+
+        Account account = accountRepository.findByIdForUpdate(accountId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Account not found"
+                        )
+                );
+
+        if (!account.getCustomer().getId().equals(customer.getId())) {
+            throw new BusinessRuleException(
+                    "You do not have access to this account"
+            );
+        }
+
+        return account;
+    }
+
     private String generateUniqueFundingReference() {
 
         String reference;

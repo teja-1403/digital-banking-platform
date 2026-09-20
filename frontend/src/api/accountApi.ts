@@ -53,3 +53,27 @@ export const getFundingStatus = async (): Promise<boolean> => {
 
   return response.data;
 };
+
+export const freezeAccount = async (accountId: number): Promise<Account> => {
+  const response = await axiosClient.post<Account>(
+    `/api/accounts/${accountId}/freeze`,
+  );
+
+  return response.data;
+};
+
+export const activateAccount = async (accountId: number): Promise<Account> => {
+  const response = await axiosClient.post<Account>(
+    `/api/accounts/${accountId}/activate`,
+  );
+
+  return response.data;
+};
+
+export const closeAccount = async (accountId: number): Promise<Account> => {
+  const response = await axiosClient.post<Account>(
+    `/api/accounts/${accountId}/close`,
+  );
+
+  return response.data;
+};

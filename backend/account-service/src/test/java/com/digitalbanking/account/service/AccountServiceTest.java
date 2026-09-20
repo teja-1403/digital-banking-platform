@@ -537,4 +537,677 @@ class AccountServiceTest {
         verify(accountRepository, never())
                 .save(any(Account.class));
     }
+
+    @Test
+    void shouldFreezeActiveAccount() {
+
+        Long userId = 1L;
+        Long accountId = 10L;
+
+        Customer customer = new Customer();
+        customer.setId(1L);
+        customer.setUserId(userId);
+
+        Account account = createAccount(
+                accountId,
+                customer,
+                "123456789012",
+                AccountType.SAVINGS,
+                new BigDecimal("5000.00"),
+                AccountStatus.ACTIVE
+        );
+
+        when(customerRepository.findByUserId(userId))
+                .thenReturn(Optional.of(customer));
+
+        when(accountRepository.findByIdForUpdate(accountId))
+                .thenReturn(Optional.of(account));
+
+        when(accountRepository.save(account))
+                .thenReturn(account);
+
+        AccountResponse response =
+                accountService.freezeAccount(userId, accountId);
+
+        assertEquals(AccountStatus.BLOCKED, account.getStatus());
+        assertEquals(AccountStatus.BLOCKED, response.getStatus());
+
+        verify(customerRepository).findByUserId(userId);
+        verify(accountRepository).findByIdForUpdate(accountId);
+        verify(accountRepository).save(account);
+    }
+
+    @Test
+    void shouldRejectFreezingNonActiveAccount() {
+
+        Long userId = 1L;
+        Long accountId = 10L;
+
+        Customer customer = new Customer();
+        customer.setId(1L);
+        customer.setUserId(userId);
+
+        Account account = createAccount(
+                accountId,
+                customer,
+                "123456789012",
+                AccountType.SAVINGS,
+                new BigDecimal("5000.00"),
+                AccountStatus.BLOCKED
+        );
+
+        when(customerRepository.findByUserId(userId))
+                .thenReturn(Optional.of(customer));
+
+        when(accountRepository.findByIdForUpdate(accountId))
+                .thenReturn(Optional.of(account));
+
+        BusinessRuleException exception =
+                assertThrows(
+                        BusinessRuleException.class,
+                        () -> accountService.freezeAccount(
+                                userId,
+                                accountId
+                        )
+                );
+
+        assertEquals(
+                "Only active accounts can be frozen",
+                exception.getMessage()
+        );
+
+        verify(accountRepository, never())
+                .save(any(Account.class));
+    }
+
+    @Test
+    void shouldActivateBlockedAccount() {
+
+        Long userId = 1L;
+        Long accountId = 10L;
+
+        Customer customer = new Customer();
+        customer.setId(1L);
+        customer.setUserId(userId);
+
+        Account account = createAccount(
+                accountId,
+                customer,
+                "123456789012",
+                AccountType.SAVINGS,
+                new BigDecimal("5000.00"),
+                AccountStatus.BLOCKED
+        );
+
+        when(customerRepository.findByUserId(userId))
+                .thenReturn(Optional.of(customer));
+
+        when(accountRepository.findByIdForUpdate(accountId))
+                .thenReturn(Optional.of(account));
+
+        when(accountRepository.save(account))
+                .thenReturn(account);
+
+        AccountResponse response =
+                accountService.activateAccount(userId, accountId);
+
+        assertEquals(AccountStatus.ACTIVE, account.getStatus());
+        assertEquals(AccountStatus.ACTIVE, response.getStatus());
+
+        verify(accountRepository).save(account);
+    }
+
+    @Test
+    void shouldRejectActivatingActiveAccount() {
+
+        Long userId = 1L;
+        Long accountId = 10L;
+
+        Customer customer = new Customer();
+        customer.setId(1L);
+        customer.setUserId(userId);
+
+        Account account = createAccount(
+                accountId,
+                customer,
+                "123456789012",
+                AccountType.SAVINGS,
+                new BigDecimal("5000.00"),
+                AccountStatus.ACTIVE
+        );
+
+        when(customerRepository.findByUserId(userId))
+                .thenReturn(Optional.of(customer));
+
+        when(accountRepository.findByIdForUpdate(accountId))
+                .thenReturn(Optional.of(account));
+
+        BusinessRuleException exception =
+                assertThrows(
+                        BusinessRuleException.class,
+                        () -> accountService.activateAccount(
+                                userId,
+                                accountId
+                        )
+                );
+
+        assertEquals(
+                "Only blocked accounts can be activated",
+                exception.getMessage()
+        );
+
+        verify(accountRepository, never())
+                .save(any(Account.class));
+    }
+
+    @Test
+    void shouldCloseZeroBalanceActiveAccount() {
+
+        Long userId = 1L;
+        Long accountId = 10L;
+
+        Customer customer = new Customer();
+        customer.setId(1L);
+        customer.setUserId(userId);
+
+        Account account = createAccount(
+                accountId,
+                customer,
+                "123456789012",
+                AccountType.SAVINGS,
+                BigDecimal.ZERO,
+                AccountStatus.ACTIVE
+        );
+
+        when(customerRepository.findByUserId(userId))
+                .thenReturn(Optional.of(customer));
+
+        when(accountRepository.findByIdForUpdate(accountId))
+                .thenReturn(Optional.of(account));
+
+        when(accountRepository.save(account))
+                .thenReturn(account);
+
+        AccountResponse response =
+                accountService.closeAccount(userId, accountId);
+
+        assertEquals(AccountStatus.CLOSED, account.getStatus());
+        assertEquals(AccountStatus.CLOSED, response.getStatus());
+
+        verify(accountRepository).save(account);
+    }
+
+    @Test
+    void shouldRejectClosingActiveAccountWithNonZeroBalance() {
+
+        Long userId = 1L;
+        Long accountId = 10L;
+
+        Customer customer = new Customer();
+        customer.setId(1L);
+        customer.setUserId(userId);
+
+        Account account = createAccount(
+                accountId,
+                customer,
+                "123456789012",
+                AccountType.SAVINGS,
+                new BigDecimal("1000.00"),
+                AccountStatus.ACTIVE
+        );
+
+        when(customerRepository.findByUserId(userId))
+                .thenReturn(Optional.of(customer));
+
+        when(accountRepository.findByIdForUpdate(accountId))
+                .thenReturn(Optional.of(account));
+
+        BusinessRuleException exception =
+                assertThrows(
+                        BusinessRuleException.class,
+                        () -> accountService.closeAccount(
+                                userId,
+                                accountId
+                        )
+                );
+
+        assertEquals(
+                "Account must have zero balance before it can be closed",
+                exception.getMessage()
+        );
+
+        assertEquals(
+                new BigDecimal("1000.00"),
+                account.getBalance()
+        );
+
+        assertEquals(
+                AccountStatus.ACTIVE,
+                account.getStatus()
+        );
+
+        verify(accountRepository, never())
+                .save(any(Account.class));
+    }
+
+    @Test
+    void shouldRejectClosingBlockedAccount() {
+
+        Long userId = 1L;
+        Long accountId = 10L;
+
+        Customer customer = new Customer();
+        customer.setId(1L);
+        customer.setUserId(userId);
+
+        Account account = createAccount(
+                accountId,
+                customer,
+                "123456789012",
+                AccountType.SAVINGS,
+                BigDecimal.ZERO,
+                AccountStatus.BLOCKED
+        );
+
+        when(customerRepository.findByUserId(userId))
+                .thenReturn(Optional.of(customer));
+
+        when(accountRepository.findByIdForUpdate(accountId))
+                .thenReturn(Optional.of(account));
+
+        BusinessRuleException exception =
+                assertThrows(
+                        BusinessRuleException.class,
+                        () -> accountService.closeAccount(
+                                userId,
+                                accountId
+                        )
+                );
+
+        assertEquals(
+                "Blocked accounts must be activated before they can be closed",
+                exception.getMessage()
+        );
+
+        assertEquals(
+                AccountStatus.BLOCKED,
+                account.getStatus()
+        );
+
+        verify(accountRepository, never())
+                .save(any(Account.class));
+    }
+
+    @Test
+    void shouldRejectActivatingClosedAccount() {
+
+        Long userId = 1L;
+        Long accountId = 10L;
+
+        Customer customer = new Customer();
+        customer.setId(1L);
+        customer.setUserId(userId);
+
+        Account account = createAccount(
+                accountId,
+                customer,
+                "123456789012",
+                AccountType.SAVINGS,
+                BigDecimal.ZERO,
+                AccountStatus.CLOSED
+        );
+
+        when(customerRepository.findByUserId(userId))
+                .thenReturn(Optional.of(customer));
+
+        when(accountRepository.findByIdForUpdate(accountId))
+                .thenReturn(Optional.of(account));
+
+        BusinessRuleException exception =
+                assertThrows(
+                        BusinessRuleException.class,
+                        () -> accountService.activateAccount(
+                                userId,
+                                accountId
+                        )
+                );
+
+        assertEquals(
+                "Only blocked accounts can be activated",
+                exception.getMessage()
+        );
+
+        verify(accountRepository, never())
+                .save(any(Account.class));
+    }
+
+    @Test
+    void shouldRejectFreezingClosedAccount() {
+
+        Long userId = 1L;
+        Long accountId = 10L;
+
+        Customer customer = new Customer();
+        customer.setId(1L);
+        customer.setUserId(userId);
+
+        Account account = createAccount(
+                accountId,
+                customer,
+                "123456789012",
+                AccountType.SAVINGS,
+                BigDecimal.ZERO,
+                AccountStatus.CLOSED
+        );
+
+        when(customerRepository.findByUserId(userId))
+                .thenReturn(Optional.of(customer));
+
+        when(accountRepository.findByIdForUpdate(accountId))
+                .thenReturn(Optional.of(account));
+
+        BusinessRuleException exception =
+                assertThrows(
+                        BusinessRuleException.class,
+                        () -> accountService.freezeAccount(
+                                userId,
+                                accountId
+                        )
+                );
+
+        assertEquals(
+                "Only active accounts can be frozen",
+                exception.getMessage()
+        );
+
+        verify(accountRepository, never())
+                .save(any(Account.class));
+    }
+
+    @Test
+    void shouldRejectFundingWhenAccountIsClosed() {
+
+        Long userId = 1L;
+        Long accountId = 10L;
+
+        Customer customer = new Customer();
+        customer.setId(1L);
+        customer.setUserId(userId);
+
+        Account account = createAccount(
+                accountId,
+                customer,
+                "123456789012",
+                AccountType.SAVINGS,
+                BigDecimal.ZERO,
+                AccountStatus.CLOSED
+        );
+
+        when(customerRepository.findByUserId(userId))
+                .thenReturn(Optional.of(customer));
+
+        when(accountRepository.findByIdForUpdate(accountId))
+                .thenReturn(Optional.of(account));
+
+        BusinessRuleException exception = assertThrows(
+                BusinessRuleException.class,
+                () -> accountService.fundAccount(
+                        userId,
+                        accountId,
+                        new BigDecimal("1000.00")
+                )
+        );
+
+        assertEquals(
+                "Only active accounts can be funded",
+                exception.getMessage()
+        );
+
+        assertEquals(
+                BigDecimal.ZERO,
+                account.getBalance()
+        );
+
+        verify(accountRepository, never())
+                .save(any(Account.class));
+
+        verify(accountFundingRepository, never())
+                .save(any(AccountFunding.class));
+    }
+
+    @Test
+    void shouldRejectTransferWhenSourceAccountIsBlocked() {
+
+        Long userId = 1L;
+
+        Customer customer = new Customer();
+        customer.setId(1L);
+        customer.setUserId(userId);
+
+        Account sourceAccount = createAccount(
+                1L,
+                customer,
+                "123456789012",
+                AccountType.SAVINGS,
+                new BigDecimal("5000.00"),
+                AccountStatus.BLOCKED
+        );
+
+        Customer destinationCustomer = new Customer();
+        destinationCustomer.setId(2L);
+        destinationCustomer.setUserId(2L);
+
+        Account destinationAccount = createAccount(
+                2L,
+                destinationCustomer,
+                "987654321098",
+                AccountType.SAVINGS,
+                new BigDecimal("2000.00"),
+                AccountStatus.ACTIVE
+        );
+
+        when(customerRepository.findByUserId(userId))
+                .thenReturn(Optional.of(customer));
+
+        when(accountRepository.findByIdForUpdate(1L))
+                .thenReturn(Optional.of(sourceAccount));
+
+        when(accountRepository.findByIdForUpdate(2L))
+                .thenReturn(Optional.of(destinationAccount));
+
+        BusinessRuleException exception = assertThrows(
+                BusinessRuleException.class,
+                () -> accountService.executeInternalTransfer(
+                        userId,
+                        1L,
+                        2L,
+                        new BigDecimal("1000.00")
+                )
+        );
+
+        assertEquals(
+                "Source account is not active",
+                exception.getMessage()
+        );
+
+        verify(accountRepository, never())
+                .save(any(Account.class));
+    }
+
+    @Test
+    void shouldRejectTransferWhenSourceAccountIsClosed() {
+
+        Long userId = 1L;
+
+        Customer customer = new Customer();
+        customer.setId(1L);
+        customer.setUserId(userId);
+
+        Account sourceAccount = createAccount(
+                1L,
+                customer,
+                "123456789012",
+                AccountType.SAVINGS,
+                BigDecimal.ZERO,
+                AccountStatus.CLOSED
+        );
+
+        Customer destinationCustomer = new Customer();
+        destinationCustomer.setId(2L);
+        destinationCustomer.setUserId(2L);
+
+        Account destinationAccount = createAccount(
+                2L,
+                destinationCustomer,
+                "987654321098",
+                AccountType.SAVINGS,
+                new BigDecimal("2000.00"),
+                AccountStatus.ACTIVE
+        );
+
+        when(customerRepository.findByUserId(userId))
+                .thenReturn(Optional.of(customer));
+
+        when(accountRepository.findByIdForUpdate(1L))
+                .thenReturn(Optional.of(sourceAccount));
+
+        when(accountRepository.findByIdForUpdate(2L))
+                .thenReturn(Optional.of(destinationAccount));
+
+        BusinessRuleException exception = assertThrows(
+                BusinessRuleException.class,
+                () -> accountService.executeInternalTransfer(
+                        userId,
+                        1L,
+                        2L,
+                        new BigDecimal("1000.00")
+                )
+        );
+
+        assertEquals(
+                "Source account is not active",
+                exception.getMessage()
+        );
+
+        verify(accountRepository, never())
+                .save(any(Account.class));
+    }
+
+    @Test
+    void shouldRejectTransferWhenDestinationAccountIsBlocked() {
+
+        Long userId = 1L;
+
+        Customer customer = new Customer();
+        customer.setId(1L);
+        customer.setUserId(userId);
+
+        Account sourceAccount = createAccount(
+                1L,
+                customer,
+                "123456789012",
+                AccountType.SAVINGS,
+                new BigDecimal("5000.00"),
+                AccountStatus.ACTIVE
+        );
+
+        Customer destinationCustomer = new Customer();
+        destinationCustomer.setId(2L);
+        destinationCustomer.setUserId(2L);
+
+        Account destinationAccount = createAccount(
+                2L,
+                destinationCustomer,
+                "987654321098",
+                AccountType.SAVINGS,
+                new BigDecimal("2000.00"),
+                AccountStatus.BLOCKED
+        );
+
+        when(customerRepository.findByUserId(userId))
+                .thenReturn(Optional.of(customer));
+
+        when(accountRepository.findByIdForUpdate(1L))
+                .thenReturn(Optional.of(sourceAccount));
+
+        when(accountRepository.findByIdForUpdate(2L))
+                .thenReturn(Optional.of(destinationAccount));
+
+        BusinessRuleException exception = assertThrows(
+                BusinessRuleException.class,
+                () -> accountService.executeInternalTransfer(
+                        userId,
+                        1L,
+                        2L,
+                        new BigDecimal("1000.00")
+                )
+        );
+
+        assertEquals(
+                "Destination account is not active",
+                exception.getMessage()
+        );
+
+        verify(accountRepository, never())
+                .save(any(Account.class));
+    }
+
+    @Test
+    void shouldRejectTransferWhenDestinationAccountIsClosed() {
+
+        Long userId = 1L;
+
+        Customer customer = new Customer();
+        customer.setId(1L);
+        customer.setUserId(userId);
+
+        Account sourceAccount = createAccount(
+                1L,
+                customer,
+                "123456789012",
+                AccountType.SAVINGS,
+                new BigDecimal("5000.00"),
+                AccountStatus.ACTIVE
+        );
+
+        Customer destinationCustomer = new Customer();
+        destinationCustomer.setId(2L);
+        destinationCustomer.setUserId(2L);
+
+        Account destinationAccount = createAccount(
+                2L,
+                destinationCustomer,
+                "987654321098",
+                AccountType.SAVINGS,
+                BigDecimal.ZERO,
+                AccountStatus.CLOSED
+        );
+
+        when(customerRepository.findByUserId(userId))
+                .thenReturn(Optional.of(customer));
+
+        when(accountRepository.findByIdForUpdate(1L))
+                .thenReturn(Optional.of(sourceAccount));
+
+        when(accountRepository.findByIdForUpdate(2L))
+                .thenReturn(Optional.of(destinationAccount));
+
+        BusinessRuleException exception = assertThrows(
+                BusinessRuleException.class,
+                () -> accountService.executeInternalTransfer(
+                        userId,
+                        1L,
+                        2L,
+                        new BigDecimal("1000.00")
+                )
+        );
+
+        assertEquals(
+                "Destination account is not active",
+                exception.getMessage()
+        );
+
+        verify(accountRepository, never())
+                .save(any(Account.class));
+    }
 }

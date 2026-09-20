@@ -102,4 +102,55 @@ public class AccountController {
                 accountService.hasFundingForUser(userId)
         );
     }
+
+    @PostMapping("/{accountId}/freeze")
+    public ResponseEntity<AccountResponse> freezeAccount(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable Long accountId
+    ) {
+
+        Long userId = authenticatedUser.getUserId(jwt);
+
+        AccountResponse response =
+                accountService.freezeAccount(
+                        userId,
+                        accountId
+                );
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/{accountId}/activate")
+    public ResponseEntity<AccountResponse> activateAccount(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable Long accountId
+    ) {
+
+        Long userId = authenticatedUser.getUserId(jwt);
+
+        AccountResponse response =
+                accountService.activateAccount(
+                        userId,
+                        accountId
+                );
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/{accountId}/close")
+    public ResponseEntity<AccountResponse> closeAccount(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable Long accountId
+    ) {
+
+        Long userId = authenticatedUser.getUserId(jwt);
+
+        AccountResponse response =
+                accountService.closeAccount(
+                        userId,
+                        accountId
+                );
+
+        return ResponseEntity.ok(response);
+    }
 }

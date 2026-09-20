@@ -2,14 +2,21 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { render, screen, waitFor } from "@testing-library/react";
 
+import { MemoryRouter } from "react-router-dom";
+
 import Dashboard from "./Dashboard";
 
 vi.mock("../../api/accountApi", () => ({
   getAccounts: vi.fn(),
+  getFundingStatus: vi.fn(),
 }));
 
 vi.mock("../../api/customerApi", () => ({
   getCurrentCustomer: vi.fn(),
+}));
+
+vi.mock("../../api/beneficiaryApi", () => ({
+  getBeneficiaries: vi.fn(),
 }));
 
 vi.mock("../../api/transactionApi", () => ({
@@ -33,11 +40,16 @@ vi.mock("recharts", () => ({
   YAxis: () => null,
 }));
 
-import { getAccounts } from "../../api/accountApi";
+import { getAccounts, getFundingStatus } from "../../api/accountApi";
+import { getBeneficiaries } from "../../api/beneficiaryApi";
 import { getCurrentCustomer } from "../../api/customerApi";
 import { getAccountTransactions } from "../../api/transactionApi";
 
 const mockedGetAccounts = vi.mocked(getAccounts);
+
+const mockedGetFundingStatus = vi.mocked(getFundingStatus);
+
+const mockedGetBeneficiaries = vi.mocked(getBeneficiaries);
 
 const mockedGetCurrentCustomer = vi.mocked(getCurrentCustomer);
 
@@ -74,6 +86,10 @@ describe("Dashboard", () => {
       },
     ]);
 
+    mockedGetFundingStatus.mockResolvedValue(false);
+
+    mockedGetBeneficiaries.mockResolvedValue([]);
+
     mockedGetAccountTransactions.mockImplementation(async (accountId) => {
       if (accountId === 1) {
         return [
@@ -99,7 +115,11 @@ describe("Dashboard", () => {
   });
 
   it("renders customer, total balance and recent transaction", async () => {
-    render(<Dashboard />);
+    render(
+      <MemoryRouter>
+        <Dashboard />
+      </MemoryRouter>,
+    );
 
     expect(await screen.findByText("Welcome, Teja")).toBeInTheDocument();
 
@@ -113,7 +133,11 @@ describe("Dashboard", () => {
   it("does not render the analytics chart when no transactions exist", async () => {
     mockedGetAccountTransactions.mockResolvedValue([]);
 
-    render(<Dashboard />);
+    render(
+      <MemoryRouter>
+        <Dashboard />
+      </MemoryRouter>,
+    );
 
     await waitFor(() => {
       expect(mockedGetAccountTransactions).toHaveBeenCalled();
@@ -141,7 +165,11 @@ describe("Dashboard", () => {
       },
     ]);
 
-    render(<Dashboard />);
+    render(
+      <MemoryRouter>
+        <Dashboard />
+      </MemoryRouter>,
+    );
 
     const failedLabel = await screen.findByText("Failed");
 
@@ -155,7 +183,11 @@ describe("Dashboard", () => {
   });
 
   it("renders the analytics chart when completed transactions exist", async () => {
-    render(<Dashboard />);
+    render(
+      <MemoryRouter>
+        <Dashboard />
+      </MemoryRouter>,
+    );
 
     await waitFor(() => {
       expect(screen.getByTestId("chart-container")).toBeInTheDocument();
