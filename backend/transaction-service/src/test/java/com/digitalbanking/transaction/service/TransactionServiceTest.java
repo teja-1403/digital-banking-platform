@@ -11,6 +11,7 @@ import com.digitalbanking.transaction.exception.AccountServiceBusinessException;
 import com.digitalbanking.transaction.exception.AccountServiceUnavailableException;
 import com.digitalbanking.transaction.exception.TransactionProcessingException;
 import com.digitalbanking.transaction.repository.TransactionRepository;
+import com.digitalbanking.transaction.exception.ResourceNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -431,6 +432,255 @@ class TransactionServiceTest {
         );
 
         return transaction;
+    }
+
+    @Test
+    void shouldReturnTransactionDetailsWhenUserOwnsSourceAccount() {
+
+        Transaction transaction =
+                createTransaction(
+                        6L,
+                        "TXN-DETAIL-001",
+                        "idem-detail-001",
+                        TransactionStatus.COMPLETED
+                );
+
+        transaction.setCreatedAt(
+                LocalDateTime.of(
+                        2026,
+                        9,
+                        20,
+                        10,
+                        0
+                )
+        );
+
+        transaction.setCompletedAt(
+                LocalDateTime.of(
+                        2026,
+                        9,
+                        20,
+                        10,
+                        1
+                )
+        );
+
+        when(
+                transactionRepository
+                        .findByTransactionReference(
+                                "TXN-DETAIL-001"
+                        )
+        ).thenReturn(
+                Optional.of(transaction)
+        );
+
+        when(
+                accountServiceClient
+                        .isAccountOwnedByUser(
+                                1L,
+                                1L
+                        )
+        ).thenReturn(true);
+
+        TransactionResponse response =
+                transactionService.getTransactionDetails(
+                        1L,
+                        "TXN-DETAIL-001"
+                );
+
+        assertNotNull(response);
+
+        assertEquals(
+                6L,
+                response.getId()
+        );
+
+        assertEquals(
+                "TXN-DETAIL-001",
+                response.getTransactionReference()
+        );
+
+        assertEquals(
+                TransactionStatus.COMPLETED,
+                response.getStatus()
+        );
+
+        assertEquals(
+                new BigDecimal("100.00"),
+                response.getAmount()
+        );
+
+        verify(accountServiceClient)
+                .isAccountOwnedByUser(
+                        1L,
+                        1L
+                );
+
+        verify(
+                accountServiceClient,
+                never()
+        ).isAccountOwnedByUser(
+                1L,
+                3L
+        );
+    }
+
+    @Test
+    void shouldReturnTransactionDetailsWhenUserOwnsDestinationAccount() {
+
+        Transaction transaction =
+                createTransaction(
+                        7L,
+                        "TXN-DETAIL-002",
+                        "idem-detail-002",
+                        TransactionStatus.COMPLETED
+                );
+
+        when(
+                transactionRepository
+                        .findByTransactionReference(
+                                "TXN-DETAIL-002"
+                        )
+        ).thenReturn(
+                Optional.of(transaction)
+        );
+
+        when(
+                accountServiceClient
+                        .isAccountOwnedByUser(
+                                2L,
+                                1L
+                        )
+        ).thenReturn(false);
+
+        when(
+                accountServiceClient
+                        .isAccountOwnedByUser(
+                                2L,
+                                3L
+                        )
+        ).thenReturn(true);
+
+        TransactionResponse response =
+                transactionService.getTransactionDetails(
+                        2L,
+                        "TXN-DETAIL-002"
+                );
+
+        assertNotNull(response);
+
+        assertEquals(
+                "TXN-DETAIL-002",
+                response.getTransactionReference()
+        );
+
+        verify(accountServiceClient)
+                .isAccountOwnedByUser(
+                        2L,
+                        1L
+                );
+
+        verify(accountServiceClient)
+                .isAccountOwnedByUser(
+                        2L,
+                        3L
+                );
+    }
+
+    @Test
+    void shouldThrowResourceNotFoundWhenTransactionDoesNotExist() {
+
+        when(
+                transactionRepository
+                        .findByTransactionReference(
+                                "TXN-NOT-FOUND"
+                        )
+        ).thenReturn(Optional.empty());
+
+        ResourceNotFoundException exception =
+                assertThrows(
+                        ResourceNotFoundException.class,
+                        () ->
+                                transactionService
+                                        .getTransactionDetails(
+                                                1L,
+                                                "TXN-NOT-FOUND"
+                                        )
+                );
+
+        assertEquals(
+                "Transaction not found",
+                exception.getMessage()
+        );
+
+        verifyNoInteractions(
+                accountServiceClient
+        );
+    }
+
+    @Test
+    void shouldRejectTransactionDetailsWhenUserOwnsNeitherAccount() {
+
+        Transaction transaction =
+                createTransaction(
+                        8L,
+                        "TXN-DETAIL-003",
+                        "idem-detail-003",
+                        TransactionStatus.FAILED
+                );
+
+        when(
+                transactionRepository
+                        .findByTransactionReference(
+                                "TXN-DETAIL-003"
+                        )
+        ).thenReturn(
+                Optional.of(transaction)
+        );
+
+        when(
+                accountServiceClient
+                        .isAccountOwnedByUser(
+                                99L,
+                                1L
+                        )
+        ).thenReturn(false);
+
+        when(
+                accountServiceClient
+                        .isAccountOwnedByUser(
+                                99L,
+                                3L
+                        )
+        ).thenReturn(false);
+
+        BusinessRuleException exception =
+                assertThrows(
+                        BusinessRuleException.class,
+                        () ->
+                                transactionService
+                                        .getTransactionDetails(
+                                                99L,
+                                                "TXN-DETAIL-003"
+                                        )
+                );
+
+        assertEquals(
+                "You do not have access to this transaction",
+                exception.getMessage()
+        );
+
+        verify(accountServiceClient)
+                .isAccountOwnedByUser(
+                        99L,
+                        1L
+                );
+
+        verify(accountServiceClient)
+                .isAccountOwnedByUser(
+                        99L,
+                        3L
+                );
     }
 
     @Test
