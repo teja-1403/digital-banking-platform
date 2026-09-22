@@ -28,6 +28,9 @@ import {
 import type { Beneficiary } from "../../types/beneficiary";
 import { getApiErrorMessage } from "../../utils/apiError";
 
+import PageHeader from "../../components/common/PageHeader";
+import EmptyState from "../../components/common/EmptyState";
+
 export default function Beneficiaries() {
   const [beneficiaries, setBeneficiaries] = useState<Beneficiary[]>([]);
 
@@ -150,34 +153,15 @@ export default function Beneficiaries() {
 
   return (
     <Box>
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: {
-            xs: "flex-start",
-            sm: "center",
-          },
-          flexDirection: {
-            xs: "column",
-            sm: "row",
-          },
-          gap: 2,
-          mb: 3,
-        }}
-      >
-        <Box>
-          <Typography variant="h4">Beneficiaries</Typography>
-
-          <Typography color="text.secondary" sx={{ mt: 0.5 }}>
-            Manage accounts you can transfer money to.
-          </Typography>
-        </Box>
-
-        <Button variant="contained" onClick={() => setDialogOpen(true)}>
-          Add Beneficiary
-        </Button>
-      </Box>
+      <PageHeader
+        title="Beneficiaries"
+        subtitle="Manage accounts you can transfer money to."
+        action={
+          <Button variant="contained" onClick={() => setDialogOpen(true)}>
+            Add Beneficiary
+          </Button>
+        }
+      />
 
       {error && (
         <Alert severity="error" sx={{ mb: 3 }}>
@@ -200,7 +184,15 @@ export default function Beneficiaries() {
                   sx={{
                     display: "flex",
                     justifyContent: "space-between",
-                    alignItems: "flex-start",
+                    alignItems: {
+                      xs: "stretch",
+                      sm: "flex-start",
+                    },
+                    gap: 2,
+                    flexDirection: {
+                      xs: "column",
+                      sm: "row",
+                    },
                   }}
                 >
                   <Box>
@@ -232,6 +224,12 @@ export default function Beneficiaries() {
                     color="error"
                     disabled={deletingId === beneficiary.id}
                     onClick={() => setDeleteTarget(beneficiary)}
+                    sx={{
+                      alignSelf: {
+                        xs: "flex-end",
+                        sm: "flex-start",
+                      },
+                    }}
                   >
                     <DeleteIcon />
                   </IconButton>
@@ -243,7 +241,15 @@ export default function Beneficiaries() {
 
         {beneficiaries.length === 0 && (
           <Grid size={12}>
-            <Alert severity="info">You don't have any beneficiaries yet.</Alert>
+            <EmptyState
+              title="No beneficiaries yet"
+              description="Add a beneficiary to make transfers faster and easier."
+              action={
+                <Button variant="contained" onClick={() => setDialogOpen(true)}>
+                  Add Beneficiary
+                </Button>
+              }
+            />
           </Grid>
         )}
       </Grid>
@@ -256,7 +262,7 @@ export default function Beneficiaries() {
       >
         <DialogTitle>Add Beneficiary</DialogTitle>
 
-        <DialogContent>
+        <DialogContent dividers>
           {formError && (
             <Alert severity="error" sx={{ mb: 2 }}>
               {formError}
@@ -294,7 +300,23 @@ export default function Beneficiaries() {
           />
         </DialogContent>
 
-        <DialogActions>
+        <DialogActions
+          sx={{
+            px: 3,
+            pb: 2,
+            gap: 1,
+            flexDirection: {
+              xs: "column-reverse",
+              sm: "row",
+            },
+            "& > button": {
+              width: {
+                xs: "100%",
+                sm: "auto",
+              },
+            },
+          }}
+        >
           <Button onClick={handleCloseDialog} disabled={isSubmitting}>
             Cancel
           </Button>
@@ -316,14 +338,30 @@ export default function Beneficiaries() {
       >
         <DialogTitle>Delete Beneficiary?</DialogTitle>
 
-        <DialogContent>
+        <DialogContent dividers>
           <Typography>
             Are you sure you want to remove{" "}
             <strong>{deleteTarget?.nickname}</strong> from your beneficiaries?
           </Typography>
         </DialogContent>
 
-        <DialogActions>
+        <DialogActions
+          sx={{
+            px: 3,
+            pb: 2,
+            gap: 1,
+            flexDirection: {
+              xs: "column-reverse",
+              sm: "row",
+            },
+            "& > button": {
+              width: {
+                xs: "100%",
+                sm: "auto",
+              },
+            },
+          }}
+        >
           <Button
             onClick={() => setDeleteTarget(null)}
             disabled={deletingId !== null}

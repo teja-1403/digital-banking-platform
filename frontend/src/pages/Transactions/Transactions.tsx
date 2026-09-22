@@ -33,6 +33,10 @@ import {
 
 import { getApiErrorMessage } from "../../utils/apiError";
 
+import PageHeader from "../../components/common/PageHeader";
+import StatusChip from "../../components/common/StatusChip";
+import EmptyState from "../../components/common/EmptyState";
+
 import type { Account } from "../../types/account";
 import type { TransactionResponse } from "../../types/transaction";
 
@@ -156,13 +160,10 @@ export default function Transactions() {
 
   return (
     <Box>
-      <Typography variant="h4" gutterBottom>
-        Transaction History
-      </Typography>
-
-      <Typography color="text.secondary" sx={{ mb: 3 }}>
-        View the transaction activity for your accounts.
-      </Typography>
+      <PageHeader
+        title="Transaction History"
+        subtitle="View the transaction activity for your accounts."
+      />
 
       {error && (
         <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError("")}>
@@ -214,12 +215,22 @@ export default function Transactions() {
               <CircularProgress />
             </Box>
           ) : transactions.length === 0 ? (
-            <Alert severity="info">
-              No transactions found for this account.
-            </Alert>
+            <EmptyState
+              title="No transactions yet"
+              description="Transactions for this account will appear here once you make or receive a transfer."
+            />
           ) : (
-            <TableContainer component={Paper}>
-              <Table>
+            <TableContainer
+              component={Paper}
+              sx={{
+                overflowX: "auto",
+              }}
+            >
+              <Table
+                sx={{
+                  minWidth: 760,
+                }}
+              >
                 <TableHead>
                   <TableRow>
                     <TableCell>Date</TableCell>
@@ -275,17 +286,7 @@ export default function Transactions() {
                       </TableCell>
 
                       <TableCell>
-                        <Chip
-                          label={transaction.status}
-                          color={
-                            transaction.status === "COMPLETED"
-                              ? "success"
-                              : transaction.status === "FAILED"
-                                ? "error"
-                                : "warning"
-                          }
-                          size="small"
-                        />
+                        <StatusChip status={transaction.status} />
                       </TableCell>
                     </TableRow>
                   ))}
@@ -331,12 +332,24 @@ export default function Transactions() {
                 sx={{
                   display: "flex",
                   justifyContent: "space-between",
-                  alignItems: "center",
-                  gap: 2,
+                  alignItems: {
+                    xs: "flex-start",
+                    sm: "center",
+                  },
+                  flexDirection: {
+                    xs: "column",
+                    sm: "row",
+                  },
+                  gap: 1,
                   mb: 2,
                 }}
               >
-                <Typography variant="h6">
+                <Typography
+                  variant="h6"
+                  sx={{
+                    overflowWrap: "anywhere",
+                  }}
+                >
                   {selectedTransaction.transactionReference}
                 </Typography>
 
