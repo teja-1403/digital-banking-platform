@@ -66,7 +66,7 @@ export default function CustomerProfileDialog({
     <Dialog open={open} fullWidth maxWidth="sm">
       <DialogTitle>Complete Your Profile</DialogTitle>
 
-      <DialogContent>
+      <DialogContent dividers>
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>
             {error}
@@ -97,13 +97,22 @@ export default function CustomerProfileDialog({
           margin="normal"
           value={form.phoneNumber}
           onChange={handleChange("phoneNumber")}
+          type="tel"
+          inputMode="tel"
+          autoComplete="tel"
           required
         />
       </DialogContent>
 
-      <DialogActions>
+      <DialogActions
+        sx={{
+          px: 3,
+          pb: 2,
+        }}
+      >
         <Button
           variant="contained"
+          fullWidth
           onClick={() => void handleSubmit()}
           disabled={isSubmitting}
         >

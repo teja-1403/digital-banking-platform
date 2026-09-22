@@ -4,7 +4,6 @@ import {
   Button,
   Card,
   CardContent,
-  Chip,
   CircularProgress,
   Dialog,
   DialogActions,
@@ -37,6 +36,9 @@ import type { Customer } from "../../types/customer";
 
 import CustomerProfileDialog from "./CustomerProfileDialog";
 import { getApiErrorMessage } from "../../utils/apiError";
+import PageHeader from "../../components/common/PageHeader";
+import StatusChip from "../../components/common/StatusChip";
+import EmptyState from "../../components/common/EmptyState";
 
 export default function Accounts() {
   const [accounts, setAccounts] = useState<Account[]>([]);
@@ -258,38 +260,19 @@ export default function Accounts() {
 
   return (
     <Box>
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: {
-            xs: "flex-start",
-            sm: "center",
-          },
-          gap: 2,
-          mb: 3,
-          flexDirection: {
-            xs: "column",
-            sm: "row",
-          },
-        }}
-      >
-        <Box>
-          <Typography variant="h4">Accounts</Typography>
-
-          <Typography color="text.secondary" sx={{ mt: 0.5 }}>
-            Manage your banking accounts.
-          </Typography>
-        </Box>
-
-        <Button
-          variant="contained"
-          onClick={() => setAccountDialogOpen(true)}
-          disabled={!customer}
-        >
-          Open Account
-        </Button>
-      </Box>
+      <PageHeader
+        title="Accounts"
+        subtitle="Manage your banking accounts."
+        action={
+          <Button
+            variant="contained"
+            onClick={() => setAccountDialogOpen(true)}
+            disabled={!customer}
+          >
+            Open Account
+          </Button>
+        }
+      />
 
       {error && (
         <Alert severity="error" sx={{ mb: 3 }}>
@@ -312,16 +295,21 @@ export default function Accounts() {
                   sx={{
                     display: "flex",
                     justifyContent: "space-between",
+                    alignItems: {
+                      xs: "flex-start",
+                      sm: "center",
+                    },
+                    flexDirection: {
+                      xs: "column",
+                      sm: "row",
+                    },
+                    gap: 1,
                     mb: 2,
                   }}
                 >
                   <Typography variant="h6">{account.accountType}</Typography>
 
-                  <Chip
-                    label={account.status}
-                    color={account.status === "ACTIVE" ? "success" : "default"}
-                    size="small"
-                  />
+                  <StatusChip status={account.status} />
                 </Box>
 
                 <Typography variant="body2" color="text.secondary">
@@ -400,10 +388,18 @@ export default function Accounts() {
 
         {accounts.length === 0 && customer && (
           <Grid size={12}>
-            <Alert severity="info">
-              You don't have any accounts yet. Open your first account to get
-              started.
-            </Alert>
+            <EmptyState
+              title="No accounts yet"
+              description="Open your first banking account to get started."
+              action={
+                <Button
+                  variant="contained"
+                  onClick={() => setAccountDialogOpen(true)}
+                >
+                  Open Account
+                </Button>
+              }
+            />
           </Grid>
         )}
       </Grid>
@@ -421,7 +417,7 @@ export default function Accounts() {
       >
         <DialogTitle>Open New Account</DialogTitle>
 
-        <DialogContent>
+        <DialogContent dividers>
           {accountError && (
             <Alert severity="error" sx={{ mb: 2 }}>
               {accountError}
@@ -446,7 +442,23 @@ export default function Accounts() {
           </FormControl>
         </DialogContent>
 
-        <DialogActions>
+        <DialogActions
+          sx={{
+            px: 3,
+            pb: 2,
+            gap: 1,
+            flexDirection: {
+              xs: "column-reverse",
+              sm: "row",
+            },
+            "& > button": {
+              width: {
+                xs: "100%",
+                sm: "auto",
+              },
+            },
+          }}
+        >
           <Button
             onClick={() => {
               setAccountDialogOpen(false);
@@ -487,7 +499,7 @@ export default function Accounts() {
       >
         <DialogTitle>Fund Account</DialogTitle>
 
-        <DialogContent>
+        <DialogContent dividers>
           {fundingAccount && (
             <Alert severity="info" sx={{ mb: 2 }}>
               {fundingAccount.accountType} — {fundingAccount.accountNumber}
@@ -523,7 +535,23 @@ export default function Accounts() {
           />
         </DialogContent>
 
-        <DialogActions>
+        <DialogActions
+          sx={{
+            px: 3,
+            pb: 2,
+            gap: 1,
+            flexDirection: {
+              xs: "column-reverse",
+              sm: "row",
+            },
+            "& > button": {
+              width: {
+                xs: "100%",
+                sm: "auto",
+              },
+            },
+          }}
+        >
           <Button
             onClick={() => {
               setFundAccountDialogOpen(false);
@@ -572,7 +600,7 @@ export default function Accounts() {
               : "Close Account"}
         </DialogTitle>
 
-        <DialogContent>
+        <DialogContent dividers>
           {lifecycleAccount && (
             <Alert severity="info" sx={{ mb: 2 }}>
               {lifecycleAccount.accountType} — {lifecycleAccount.accountNumber}
@@ -603,7 +631,23 @@ export default function Accounts() {
           )}
         </DialogContent>
 
-        <DialogActions>
+        <DialogActions
+          sx={{
+            px: 3,
+            pb: 2,
+            gap: 1,
+            flexDirection: {
+              xs: "column-reverse",
+              sm: "row",
+            },
+            "& > button": {
+              width: {
+                xs: "100%",
+                sm: "auto",
+              },
+            },
+          }}
+        >
           <Button
             onClick={() => {
               setLifecycleAccount(null);

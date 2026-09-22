@@ -4,7 +4,6 @@ import {
   Button,
   Card,
   CardContent,
-  Chip,
   CircularProgress,
   Grid,
   Paper,
@@ -36,6 +35,10 @@ import type { Customer } from "../../types/customer";
 import type { TransactionResponse } from "../../types/transaction";
 
 import { getTransactionSummary } from "../../utils/transactionAnalytics";
+
+import PageHeader from "../../components/common/PageHeader";
+import StatusChip from "../../components/common/StatusChip";
+import EmptyState from "../../components/common/EmptyState";
 
 export default function Dashboard() {
   const [customer, setCustomer] = useState<Customer | null>(null);
@@ -284,13 +287,12 @@ export default function Dashboard() {
 
   return (
     <Box>
-      <Typography variant="h4" gutterBottom>
-        {customer ? `Welcome, ${customer.firstName}` : "Welcome to SecureBank"}
-      </Typography>
-
-      <Typography color="text.secondary" sx={{ mb: 3 }}>
-        Here's an overview of your banking activity.
-      </Typography>
+      <PageHeader
+        title={
+          customer ? `Welcome, ${customer.firstName}` : "Welcome to SecureBank"
+        }
+        subtitle="Here's an overview of your banking activity."
+      />
 
       {!onboardingComplete && (
         <Card sx={{ mb: 3 }}>
@@ -473,13 +475,7 @@ export default function Dashboard() {
                       </Typography>
                     </Box>
 
-                    <Chip
-                      label={account.status}
-                      color={
-                        account.status === "ACTIVE" ? "success" : "default"
-                      }
-                      size="small"
-                    />
+                    <StatusChip status={account.status} />
                   </Box>
 
                   <Typography variant="h5" sx={{ mt: 2 }}>
@@ -544,7 +540,10 @@ export default function Dashboard() {
       </Typography>
 
       {recentTransactions.length === 0 ? (
-        <Alert severity="info">No transactions yet.</Alert>
+        <EmptyState
+          title="No transactions yet"
+          description="Your recent banking activity will appear here once you make or receive a transfer."
+        />
       ) : (
         <Stack spacing={1.5}>
           {recentTransactions.map((transaction) => (
@@ -553,8 +552,15 @@ export default function Dashboard() {
                 sx={{
                   display: "flex",
                   justifyContent: "space-between",
-                  alignItems: "center",
+                  alignItems: {
+                    xs: "flex-start",
+                    sm: "center",
+                  },
                   gap: 2,
+                  flexDirection: {
+                    xs: "column",
+                    sm: "row",
+                  },
                 }}
               >
                 <Box>
@@ -569,24 +575,21 @@ export default function Dashboard() {
 
                 <Box
                   sx={{
-                    textAlign: "right",
+                    textAlign: {
+                      xs: "left",
+                      sm: "right",
+                    },
+                    width: {
+                      xs: "100%",
+                      sm: "auto",
+                    },
                   }}
                 >
                   <Typography sx={{ fontWeight: 600 }}>
                     {transaction.currency} {transaction.amount.toFixed(2)}
                   </Typography>
 
-                  <Chip
-                    label={transaction.status}
-                    color={
-                      transaction.status === "COMPLETED"
-                        ? "success"
-                        : transaction.status === "FAILED"
-                          ? "error"
-                          : "warning"
-                    }
-                    size="small"
-                  />
+                  <StatusChip status={transaction.status} />
                 </Box>
               </Box>
             </Paper>
