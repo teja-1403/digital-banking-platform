@@ -15,12 +15,27 @@ import {
   TableHead,
   TableRow,
   Typography,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Divider,
 } from "@mui/material";
 
 import { useEffect, useMemo, useState } from "react";
 
 import { getAccounts } from "../../api/accountApi";
-import { getAccountTransactions } from "../../api/transactionApi";
+import {
+  getAccountTransactions,
+  getTransactionDetails,
+} from "../../api/transactionApi";
+
+import { getApiErrorMessage } from "../../utils/apiError";
+
+import PageHeader from "../../components/common/PageHeader";
+import StatusChip from "../../components/common/StatusChip";
+import EmptyState from "../../components/common/EmptyState";
 
 import type { Account } from "../../types/account";
 import type { TransactionResponse } from "../../types/transaction";
@@ -37,6 +52,13 @@ export default function Transactions() {
   const [isLoadingTransactions, setIsLoadingTransactions] = useState(false);
 
   const [error, setError] = useState("");
+
+  const [selectedTransaction, setSelectedTransaction] =
+    useState<TransactionResponse | null>(null);
+
+  const [isLoadingDetails, setIsLoadingDetails] = useState(false);
+
+  const [detailsError, setDetailsError] = useState("");
 
   useEffect(() => {
     const loadAccounts = async () => {
@@ -89,6 +111,33 @@ export default function Transactions() {
     void loadTransactions();
   }, [selectedAccountId]);
 
+  const handleOpenTransactionDetails = async (transactionReference: string) => {
+    setSelectedTransaction(null);
+    setDetailsError("");
+    setIsLoadingDetails(true);
+
+    try {
+      const data = await getTransactionDetails(transactionReference);
+
+      setSelectedTransaction(data);
+    } catch (error) {
+      setDetailsError(
+        getApiErrorMessage(error, "Unable to load transaction details."),
+      );
+    } finally {
+      setIsLoadingDetails(false);
+    }
+  };
+
+  const handleCloseTransactionDetails = () => {
+    if (isLoadingDetails) {
+      return;
+    }
+
+    setSelectedTransaction(null);
+    setDetailsError("");
+  };
+
   const selectedAccount = useMemo(
     () => accounts.find((account) => account.id === Number(selectedAccountId)),
     [accounts, selectedAccountId],
@@ -111,13 +160,10 @@ export default function Transactions() {
 
   return (
     <Box>
-      <Typography variant="h4" gutterBottom>
-        Transaction History
-      </Typography>
-
-      <Typography color="text.secondary" sx={{ mb: 3 }}>
-        View the transaction activity for your accounts.
-      </Typography>
+      <PageHeader
+        title="Transaction History"
+        subtitle="View the transaction activity for your accounts."
+      />
 
       {error && (
         <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError("")}>
@@ -169,12 +215,22 @@ export default function Transactions() {
               <CircularProgress />
             </Box>
           ) : transactions.length === 0 ? (
-            <Alert severity="info">
-              No transactions found for this account.
-            </Alert>
+            <EmptyState
+              title="No transactions yet"
+              description="Transactions for this account will appear here once you make or receive a transfer."
+            />
           ) : (
-            <TableContainer component={Paper}>
-              <Table>
+            <TableContainer
+              component={Paper}
+              sx={{
+                overflowX: "auto",
+              }}
+            >
+              <Table
+                sx={{
+                  minWidth: 760,
+                }}
+              >
                 <TableHead>
                   <TableRow>
                     <TableCell>Date</TableCell>
@@ -193,7 +249,28 @@ export default function Transactions() {
 
                 <TableBody>
                   {transactions.map((transaction) => (
-                    <TableRow key={transaction.id} hover>
+                    <TableRow
+                      key={transaction.id}
+                      hover
+                      tabIndex={0}
+                      onClick={() =>
+                        void handleOpenTransactionDetails(
+                          transaction.transactionReference,
+                        )
+                      }
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter" || event.key === " ") {
+                          event.preventDefault();
+
+                          void handleOpenTransactionDetails(
+                            transaction.transactionReference,
+                          );
+                        }
+                      }}
+                      sx={{
+                        cursor: "pointer",
+                      }}
+                    >
                       <TableCell>
                         {new Date(transaction.createdAt).toLocaleString()}
                       </TableCell>
@@ -209,17 +286,7 @@ export default function Transactions() {
                       </TableCell>
 
                       <TableCell>
-                        <Chip
-                          label={transaction.status}
-                          color={
-                            transaction.status === "COMPLETED"
-                              ? "success"
-                              : transaction.status === "FAILED"
-                                ? "error"
-                                : "warning"
-                          }
-                          size="small"
-                        />
+                        <StatusChip status={transaction.status} />
                       </TableCell>
                     </TableRow>
                   ))}
@@ -229,6 +296,185 @@ export default function Transactions() {
           )}
         </>
       )}
+      <Dialog
+        open={
+          isLoadingDetails ||
+          selectedTransaction !== null ||
+          detailsError !== ""
+        }
+        onClose={handleCloseTransactionDetails}
+        fullWidth
+        maxWidth="sm"
+      >
+        <DialogTitle>Transaction Details</DialogTitle>
+
+        <DialogContent dividers>
+          {isLoadingDetails && (
+            <Box
+              sx={{
+                minHeight: 200,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              <CircularProgress />
+            </Box>
+          )}
+
+          {!isLoadingDetails && detailsError && (
+            <Alert severity="error">{detailsError}</Alert>
+          )}
+
+          {!isLoadingDetails && selectedTransaction && (
+            <Box>
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: {
+                    xs: "flex-start",
+                    sm: "center",
+                  },
+                  flexDirection: {
+                    xs: "column",
+                    sm: "row",
+                  },
+                  gap: 1,
+                  mb: 2,
+                }}
+              >
+                <Typography
+                  variant="h6"
+                  sx={{
+                    overflowWrap: "anywhere",
+                  }}
+                >
+                  {selectedTransaction.transactionReference}
+                </Typography>
+
+                <Chip
+                  label={selectedTransaction.status}
+                  color={
+                    selectedTransaction.status === "COMPLETED"
+                      ? "success"
+                      : selectedTransaction.status === "FAILED"
+                        ? "error"
+                        : "warning"
+                  }
+                />
+              </Box>
+
+              <Divider sx={{ mb: 2 }} />
+
+              <Box
+                sx={{
+                  display: "grid",
+                  gridTemplateColumns: {
+                    xs: "1fr",
+                    sm: "1fr 1fr",
+                  },
+                  gap: 2,
+                }}
+              >
+                <Box>
+                  <Typography variant="body2" color="text.secondary">
+                    Transaction ID
+                  </Typography>
+                  <Typography>{selectedTransaction.id}</Typography>
+                </Box>
+
+                <Box>
+                  <Typography variant="body2" color="text.secondary">
+                    Type
+                  </Typography>
+                  <Typography>{selectedTransaction.type}</Typography>
+                </Box>
+
+                <Box>
+                  <Typography variant="body2" color="text.secondary">
+                    Amount
+                  </Typography>
+                  <Typography variant="h6">
+                    {selectedTransaction.currency}{" "}
+                    {selectedTransaction.amount.toFixed(2)}
+                  </Typography>
+                </Box>
+
+                <Box>
+                  <Typography variant="body2" color="text.secondary">
+                    Description
+                  </Typography>
+                  <Typography>
+                    {selectedTransaction.description || "—"}
+                  </Typography>
+                </Box>
+
+                <Box>
+                  <Typography variant="body2" color="text.secondary">
+                    Source Account ID
+                  </Typography>
+                  <Typography>{selectedTransaction.sourceAccountId}</Typography>
+                </Box>
+
+                <Box>
+                  <Typography variant="body2" color="text.secondary">
+                    Destination Account ID
+                  </Typography>
+                  <Typography>
+                    {selectedTransaction.destinationAccountId}
+                  </Typography>
+                </Box>
+
+                <Box>
+                  <Typography variant="body2" color="text.secondary">
+                    Created At
+                  </Typography>
+                  <Typography>
+                    {new Date(selectedTransaction.createdAt).toLocaleString()}
+                  </Typography>
+                </Box>
+
+                <Box>
+                  <Typography variant="body2" color="text.secondary">
+                    Completed At
+                  </Typography>
+                  <Typography>
+                    {selectedTransaction.completedAt
+                      ? new Date(
+                          selectedTransaction.completedAt,
+                        ).toLocaleString()
+                      : "—"}
+                  </Typography>
+                </Box>
+              </Box>
+
+              <Box sx={{ mt: 2 }}>
+                <Typography variant="body2" color="text.secondary">
+                  Idempotency Key
+                </Typography>
+
+                <Typography
+                  sx={{
+                    wordBreak: "break-all",
+                  }}
+                >
+                  {selectedTransaction.idempotencyKey}
+                </Typography>
+              </Box>
+            </Box>
+          )}
+        </DialogContent>
+
+        <DialogActions>
+          <Button
+            onClick={handleCloseTransactionDetails}
+            disabled={isLoadingDetails}
+          >
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }

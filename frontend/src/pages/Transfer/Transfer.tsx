@@ -26,6 +26,8 @@ import type { Beneficiary } from "../../types/beneficiary";
 import type { TransactionResponse } from "../../types/transaction";
 import { getApiErrorMessage } from "../../utils/apiError";
 
+import PageHeader from "../../components/common/PageHeader";
+
 export default function Transfer() {
   const [accounts, setAccounts] = useState<Account[]>([]);
 
@@ -202,13 +204,10 @@ export default function Transfer() {
 
   return (
     <Box>
-      <Typography variant="h4" gutterBottom>
-        Transfer Money
-      </Typography>
-
-      <Typography color="text.secondary" sx={{ mb: 3 }}>
-        Transfer money to one of your beneficiaries.
-      </Typography>
+      <PageHeader
+        title="Transfer Money"
+        subtitle="Transfer money to one of your beneficiaries."
+      />
 
       {accounts.length === 0 && (
         <Alert severity="warning" sx={{ mb: 3 }}>
@@ -232,7 +231,7 @@ export default function Transfer() {
       <Card>
         <CardContent>
           <Grid container spacing={2}>
-            <Grid size={12}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <FormControl fullWidth>
                 <InputLabel>From Account</InputLabel>
 
@@ -252,7 +251,7 @@ export default function Transfer() {
               </FormControl>
             </Grid>
 
-            <Grid size={12}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <FormControl fullWidth>
                 <InputLabel>Beneficiary</InputLabel>
 
@@ -275,7 +274,7 @@ export default function Transfer() {
               </FormControl>
             </Grid>
 
-            <Grid size={12}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 fullWidth
                 label="Amount"
@@ -291,7 +290,7 @@ export default function Transfer() {
               />
             </Grid>
 
-            <Grid size={12}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <TextField
                 fullWidth
                 label="Description"
@@ -306,7 +305,7 @@ export default function Transfer() {
             </Grid>
 
             {selectedSourceAccount && (
-              <Grid size={12}>
+              <Grid size={{ xs: 12, sm: 6 }}>
                 <Alert severity="info">
                   Available balance: {selectedSourceAccount.currency}{" "}
                   {selectedSourceAccount.balance.toFixed(2)}
@@ -314,7 +313,7 @@ export default function Transfer() {
               </Grid>
             )}
 
-            <Grid size={12}>
+            <Grid size={{ xs: 12, sm: 6 }}>
               <Button
                 variant="contained"
                 size="large"

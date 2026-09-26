@@ -4,6 +4,8 @@ import com.digitalbanking.account.dto.AccountResponse;
 import com.digitalbanking.account.dto.CreateAccountRequest;
 import com.digitalbanking.account.security.AuthenticatedUser;
 import com.digitalbanking.account.service.AccountService;
+import com.digitalbanking.account.dto.FundAccountRequest;
+import com.digitalbanking.account.dto.FundAccountResponse;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -69,5 +71,86 @@ public class AccountController {
         return ResponseEntity.ok(
                 accountService.getAccount(userId, accountId)
         );
+    }
+
+    @PostMapping("/{accountId}/fund")
+    public ResponseEntity<FundAccountResponse> fundAccount(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable Long accountId,
+            @Valid @RequestBody FundAccountRequest request
+    ) {
+
+        Long userId = authenticatedUser.getUserId(jwt);
+
+        FundAccountResponse response =
+                accountService.fundAccount(
+                        userId,
+                        accountId,
+                        request.getAmount()
+                );
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/funding-status")
+    public ResponseEntity<Boolean> getFundingStatus(
+            @AuthenticationPrincipal Jwt jwt) {
+
+        Long userId = authenticatedUser.getUserId(jwt);
+
+        return ResponseEntity.ok(
+                accountService.hasFundingForUser(userId)
+        );
+    }
+
+    @PostMapping("/{accountId}/freeze")
+    public ResponseEntity<AccountResponse> freezeAccount(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable Long accountId
+    ) {
+
+        Long userId = authenticatedUser.getUserId(jwt);
+
+        AccountResponse response =
+                accountService.freezeAccount(
+                        userId,
+                        accountId
+                );
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/{accountId}/activate")
+    public ResponseEntity<AccountResponse> activateAccount(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable Long accountId
+    ) {
+
+        Long userId = authenticatedUser.getUserId(jwt);
+
+        AccountResponse response =
+                accountService.activateAccount(
+                        userId,
+                        accountId
+                );
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/{accountId}/close")
+    public ResponseEntity<AccountResponse> closeAccount(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable Long accountId
+    ) {
+
+        Long userId = authenticatedUser.getUserId(jwt);
+
+        AccountResponse response =
+                accountService.closeAccount(
+                        userId,
+                        accountId
+                );
+
+        return ResponseEntity.ok(response);
     }
 }

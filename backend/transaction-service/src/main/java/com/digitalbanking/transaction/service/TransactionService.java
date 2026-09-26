@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.digitalbanking.transaction.exception.AccountServiceBusinessException;
 import com.digitalbanking.transaction.exception.AccountServiceUnavailableException;
 import com.digitalbanking.transaction.exception.TransactionProcessingException;
+import com.digitalbanking.transaction.exception.ResourceNotFoundException;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -275,6 +276,60 @@ public class TransactionService {
                 .stream()
                 .map(this::toHistoryResponse)
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public TransactionResponse getTransactionDetails(
+            Long userId,
+            String transactionReference
+    ) {
+
+        if (transactionReference == null ||
+                transactionReference.isBlank()) {
+
+            throw new BusinessRuleException(
+                    "Transaction reference is required"
+            );
+        }
+
+        Transaction transaction =
+                transactionRepository
+                        .findByTransactionReference(
+                                transactionReference
+                        )
+                        .orElseThrow(() ->
+                                new ResourceNotFoundException(
+                                        "Transaction not found"
+                                )
+                        );
+
+        boolean sourceOwner =
+                transaction.getSourceAccountId() != null &&
+                        accountServiceClient.isAccountOwnedByUser(
+                                userId,
+                                transaction.getSourceAccountId()
+                        );
+
+        boolean destinationOwner = false;
+
+        if (!sourceOwner &&
+                transaction.getDestinationAccountId() != null) {
+
+            destinationOwner =
+                    accountServiceClient.isAccountOwnedByUser(
+                            userId,
+                            transaction.getDestinationAccountId()
+                    );
+        }
+
+        if (!sourceOwner && !destinationOwner) {
+
+            throw new BusinessRuleException(
+                    "You do not have access to this transaction"
+            );
+        }
+
+        return toResponse(transaction);
     }
 
     private TransactionResponse toResponse(

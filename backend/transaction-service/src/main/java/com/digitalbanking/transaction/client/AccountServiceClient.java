@@ -8,20 +8,29 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.json.JsonMapper;
+
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 
 @Component
 public class AccountServiceClient {
 
     private final RestClient restClient;
     private final String internalServiceSecret;
+    private final JsonMapper jsonMapper;
 
     public AccountServiceClient(
             RestClient accountServiceRestClient,
             @Value("${internal.service-secret}")
-                    String internalServiceSecret
+                    String internalServiceSecret,
+            JsonMapper jsonMapper
     ) {
         this.restClient = accountServiceRestClient;
         this.internalServiceSecret = internalServiceSecret;
+        this.jsonMapper = jsonMapper;
     }
 
     public void executeTransfer(
@@ -52,8 +61,10 @@ public class AccountServiceClient {
                             status -> status.is4xxClientError(),
                             (requestSpec, clientResponse) -> {
                                 throw new AccountServiceBusinessException(
-                                        "Account Service rejected the transfer: "
-                                                + clientResponse.getStatusText()
+                                        extractErrorMessage(
+                                                clientResponse,
+                                                "Account Service rejected the transfer"
+                                        )
                                 );
                             }
                     )
@@ -115,8 +126,10 @@ public class AccountServiceClient {
                                     status -> status.is4xxClientError(),
                                     (requestSpec, clientResponse) -> {
                                         throw new AccountServiceBusinessException(
-                                                "Account Service rejected ownership check: "
-                                                        + clientResponse.getStatusText()
+                                                extractErrorMessage(
+                                                        clientResponse,
+                                                        "Account Service rejected ownership check"
+                                                )
                                         );
                                     }
                             )
@@ -150,11 +163,50 @@ public class AccountServiceClient {
         }
     }
 
+    private String extractErrorMessage(
+            org.springframework.http.client.ClientHttpResponse clientResponse,
+            String fallbackMessage
+    ) throws IOException {
+
+        try {
+
+            String responseBody =
+                    new String(
+                            clientResponse.getBody().readAllBytes(),
+                            StandardCharsets.UTF_8
+                    );
+
+            if (!responseBody.isBlank()) {
+
+                JsonNode root =
+                        jsonMapper.readTree(responseBody);
+
+                JsonNode messageNode =
+                        root.get("message");
+
+                if (messageNode != null &&
+                        !messageNode.isNull() &&
+                        !messageNode.asString().isBlank()) {
+
+                    return messageNode.asString();
+                }
+            }
+
+        } catch (IOException | RuntimeException ignored) {
+            // Fall back to a generic message if the error body
+            // cannot be read or parsed.
+        }
+
+        return fallbackMessage +
+                ": " +
+                clientResponse.getStatusText();
+    }
+
     private record InternalTransferPayload(
             Long userId,
             Long sourceAccountId,
             Long destinationAccountId,
-            java.math.BigDecimal amount
+            BigDecimal amount
     ) {
     }
 }

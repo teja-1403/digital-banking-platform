@@ -6,7 +6,10 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.function.RouterFunction;
 import org.springframework.web.servlet.function.ServerResponse;
 
+import java.net.URI;
+
 import static org.springframework.cloud.gateway.server.mvc.filter.BeforeFilterFunctions.uri;
+import static org.springframework.cloud.gateway.server.mvc.filter.CircuitBreakerFilterFunctions.circuitBreaker;
 import static org.springframework.cloud.gateway.server.mvc.handler.GatewayRouterFunctions.route;
 import static org.springframework.cloud.gateway.server.mvc.handler.HandlerFunctions.http;
 
@@ -31,6 +34,10 @@ public class GatewayRoutesConfig {
                 .PATCH("/api/auth/**", http())
                 .DELETE("/api/auth/**", http())
                 .before(uri(authServiceUrl))
+                .filter(circuitBreaker(
+                        "authServiceCircuitBreaker",
+                        URI.create("forward:/fallback/service-unavailable")
+                ))
                 .build();
     }
 
@@ -43,6 +50,10 @@ public class GatewayRoutesConfig {
                 .PATCH("/api/customers/**", http())
                 .DELETE("/api/customers/**", http())
                 .before(uri(accountServiceUrl))
+                .filter(circuitBreaker(
+                        "accountServiceCircuitBreaker",
+                        URI.create("forward:/fallback/service-unavailable")
+                ))
                 .build();
     }
 
@@ -55,6 +66,10 @@ public class GatewayRoutesConfig {
                 .PATCH("/api/accounts/**", http())
                 .DELETE("/api/accounts/**", http())
                 .before(uri(accountServiceUrl))
+                .filter(circuitBreaker(
+                        "accountServiceCircuitBreaker",
+                        URI.create("forward:/fallback/service-unavailable")
+                ))
                 .build();
     }
 
@@ -67,6 +82,10 @@ public class GatewayRoutesConfig {
                 .PATCH("/api/beneficiaries/**", http())
                 .DELETE("/api/beneficiaries/**", http())
                 .before(uri(accountServiceUrl))
+                .filter(circuitBreaker(
+                        "accountServiceCircuitBreaker",
+                        URI.create("forward:/fallback/service-unavailable")
+                ))
                 .build();
     }
 
@@ -79,6 +98,10 @@ public class GatewayRoutesConfig {
                 .PATCH("/api/transactions/**", http())
                 .DELETE("/api/transactions/**", http())
                 .before(uri(transactionServiceUrl))
+                .filter(circuitBreaker(
+                        "transactionServiceCircuitBreaker",
+                        URI.create("forward:/fallback/service-unavailable")
+                ))
                 .build();
     }
 
@@ -87,6 +110,10 @@ public class GatewayRoutesConfig {
         return route("admin-user-stats")
                 .GET("/api/admin/user-stats", http())
                 .before(uri(authServiceUrl))
+                .filter(circuitBreaker(
+                        "authServiceCircuitBreaker",
+                        URI.create("forward:/fallback/service-unavailable")
+                ))
                 .build();
     }
 
@@ -95,6 +122,10 @@ public class GatewayRoutesConfig {
         return route("admin-account-stats")
                 .GET("/api/admin/account-stats", http())
                 .before(uri(accountServiceUrl))
+                .filter(circuitBreaker(
+                        "accountServiceCircuitBreaker",
+                        URI.create("forward:/fallback/service-unavailable")
+                ))
                 .build();
     }
 
@@ -103,6 +134,10 @@ public class GatewayRoutesConfig {
         return route("admin-transaction-stats")
                 .GET("/api/admin/transaction-stats", http())
                 .before(uri(transactionServiceUrl))
+                .filter(circuitBreaker(
+                        "transactionServiceCircuitBreaker",
+                        URI.create("forward:/fallback/service-unavailable")
+                ))
                 .build();
     }
 }

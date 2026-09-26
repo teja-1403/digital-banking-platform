@@ -31,3 +31,13 @@ export const getAccountTransactions = async (
 
   return response.data;
 };
+
+export const getTransactionDetails = async (
+  transactionReference: string,
+): Promise<TransactionResponse> => {
+  const response = await axiosClient.get<TransactionResponse>(
+    `/api/transactions/${encodeURIComponent(transactionReference)}`,
+  );
+
+  return response.data;
+};

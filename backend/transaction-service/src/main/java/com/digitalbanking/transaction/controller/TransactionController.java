@@ -45,6 +45,23 @@ public class TransactionController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/{transactionReference}")
+    public ResponseEntity<TransactionResponse> getTransactionDetails(
+            @AuthenticationPrincipal Jwt jwt,
+            @PathVariable String transactionReference
+    ) {
+
+        Long userId = jwt.getClaim("userId");
+
+        TransactionResponse response =
+                transactionService.getTransactionDetails(
+                        userId,
+                        transactionReference
+                );
+
+        return ResponseEntity.ok(response);
+    }
+
     @GetMapping("/account/{accountId}")
     public ResponseEntity<List<TransactionHistoryResponse>>
     getAccountHistory(

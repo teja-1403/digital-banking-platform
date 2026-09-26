@@ -16,6 +16,8 @@ import {
   getAdminUserStats,
 } from "../../api/adminApi";
 
+import PageHeader from "../../components/common/PageHeader";
+
 import type {
   AdminAccountStats,
   AdminTransactionStats,
@@ -82,13 +84,10 @@ export default function AdminDashboard() {
 
   return (
     <Box>
-      <Typography variant="h4" gutterBottom>
-        Admin Dashboard
-      </Typography>
-
-      <Typography color="text.secondary" sx={{ mb: 3 }}>
-        Platform-wide banking statistics.
-      </Typography>
+      <PageHeader
+        title="Admin Dashboard"
+        subtitle="Platform-wide banking statistics."
+      />
 
       <Grid container spacing={2}>
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
