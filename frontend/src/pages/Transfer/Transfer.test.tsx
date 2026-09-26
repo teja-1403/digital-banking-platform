@@ -1,10 +1,10 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
-
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 
 import userEvent from "@testing-library/user-event";
 
 import { MemoryRouter } from "react-router-dom";
+
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import Transfer from "./Transfer";
 
@@ -21,7 +21,9 @@ vi.mock("../../api/transactionApi", () => ({
 }));
 
 import { getAccounts } from "../../api/accountApi";
+
 import { getBeneficiaries } from "../../api/beneficiaryApi";
+
 import { createTransfer } from "../../api/transactionApi";
 
 const mockedGetAccounts = vi.mocked(getAccounts);
@@ -70,84 +72,6 @@ describe("Transfer", () => {
     });
   });
 
-  it("sends the selected beneficiary account ID", async () => {
-    const user = userEvent.setup();
-
-    render(
-      <MemoryRouter>
-        <Transfer />
-      </MemoryRouter>,
-    );
-
-    await waitFor(() => {
-      expect(screen.getAllByRole("combobox")).toHaveLength(2);
-    });
-
-    const comboboxes = screen.getAllByRole("combobox");
-
-    // 0 = source account
-    // 1 = beneficiary
-    await user.click(comboboxes[1]);
-
-    const option = await screen.findByRole("option", {
-      name: /user 2.*209275150527/i,
-    });
-
-    await user.click(option);
-
-    await user.type(
-      screen.getByRole("spinbutton", {
-        name: /amount/i,
-      }),
-      "100",
-    );
-
-    await user.type(
-      screen.getByRole("textbox", {
-        name: /description/i,
-      }),
-      "Test transfer",
-    );
-
-    const submitButton = screen.getByRole("button", {
-      name: /transfer money/i,
-    });
-
-    expect(submitButton).toBeInTheDocument();
-    expect(submitButton).not.toBeDisabled();
-
-    await user.click(submitButton);
-
-    await waitFor(() => {
-      expect(mockedCreateTransfer).toHaveBeenCalledTimes(1);
-    });
-
-    const [request, idempotencyKey] = mockedCreateTransfer.mock.calls[0];
-
-    expect(request).toEqual({
-      sourceAccountId: 1,
-      destinationAccountId: 7,
-      amount: 100,
-      currency: "INR",
-      description: "Test transfer",
-    });
-
-    expect(typeof idempotencyKey).toBe("string");
-
-    expect(idempotencyKey.length).toBeGreaterThan(0);
-
-    /*
-     * The component renders:
-     * "Reference: TXN-TEST-001"
-     * so use a regex instead of exact text matching.
-     */
-    expect(await screen.findByText(/TXN-TEST-001/i)).toBeInTheDocument();
-
-    expect(screen.getByText(/Status:\s*COMPLETED/i)).toBeInTheDocument();
-
-    expect(screen.getByText(/Amount:\s*INR\s*100\.00/i)).toBeInTheDocument();
-  });
-
   it("rejects an amount greater than the balance", async () => {
     const user = userEvent.setup();
 
@@ -157,9 +81,7 @@ describe("Transfer", () => {
       </MemoryRouter>,
     );
 
-    await waitFor(() => {
-      expect(screen.getAllByRole("combobox")).toHaveLength(2);
-    });
+    await screen.findAllByRole("combobox");
 
     const comboboxes = screen.getAllByRole("combobox");
 

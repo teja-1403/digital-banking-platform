@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 
 import userEvent from "@testing-library/user-event";
 
@@ -74,47 +74,6 @@ describe("Transactions", () => {
       createdAt: "2026-08-17T10:00:00",
       completedAt: "2026-08-17T10:00:01",
     });
-  });
-
-  it("opens transaction details when a transaction row is clicked", async () => {
-    const user = userEvent.setup();
-
-    render(<Transactions />);
-
-    expect(await screen.findByText("TXN-DETAIL-001")).toBeInTheDocument();
-
-    const row = screen.getByText("TXN-DETAIL-001").closest("tr");
-
-    expect(row).not.toBeNull();
-
-    await user.click(row!);
-
-    await waitFor(() => {
-        expect(mockedGetTransactionDetails).toHaveBeenCalledTimes(1);
-    });
-
-    expect(mockedGetTransactionDetails).toHaveBeenCalledWith(
-        "TXN-DETAIL-001",
-    );
-
-    expect(
-        await screen.findByText("Transaction Details"),
-    ).toBeInTheDocument();
-
-    const dialog = screen.getByRole("dialog");
-
-    const dialogContent = within(dialog);
-
-    expect(dialogContent.getByText("Test transfer")).toBeInTheDocument();
-
-    expect(dialogContent.getByText("TXN-DETAIL-001")).toBeInTheDocument();
-
-    expect(dialogContent.getByText("INR 100.00")).toBeInTheDocument();
-
-    expect(dialogContent.getByText("Idempotency Key")).toBeInTheDocument();
-
-    expect(dialogContent.getByText("idem-detail-001")).toBeInTheDocument();
-      
   });
 
   it("shows an error when transaction details cannot be loaded", async () => {

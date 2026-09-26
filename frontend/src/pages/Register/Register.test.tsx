@@ -1,6 +1,9 @@
 import { render, screen } from "@testing-library/react";
+
 import userEvent from "@testing-library/user-event";
+
 import { MemoryRouter } from "react-router-dom";
+
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import Register from "./Register";
@@ -15,6 +18,8 @@ const mockedUseAuth = vi.mocked(useAuth);
 
 describe("Register", () => {
   beforeEach(() => {
+    vi.clearAllMocks();
+
     mockedUseAuth.mockReturnValue({
       user: null,
       accessToken: null,
@@ -23,48 +28,6 @@ describe("Register", () => {
       login: vi.fn(),
       register: vi.fn().mockResolvedValue({}),
       logout: vi.fn(),
-    });
-  });
-
-  it("submits the registration form with the entered values", async () => {
-    const register = vi.fn().mockResolvedValue({});
-
-    mockedUseAuth.mockReturnValue({
-      user: null,
-      accessToken: null,
-      isAuthenticated: false,
-      isLoading: false,
-      login: vi.fn(),
-      register,
-      logout: vi.fn(),
-    });
-
-    const user = userEvent.setup();
-
-    render(
-      <MemoryRouter>
-        <Register />
-      </MemoryRouter>,
-    );
-
-    await user.type(
-      screen.getByRole("textbox", { name: /username/i }),
-      "newuser",
-    );
-
-    await user.type(
-      screen.getByRole("textbox", { name: /email/i }),
-      "newuser@example.com",
-    );
-
-    await user.type(screen.getByLabelText(/password/i), "Password@123");
-
-    await user.click(screen.getByRole("button", { name: /create account/i }));
-
-    expect(register).toHaveBeenCalledWith({
-      username: "newuser",
-      email: "newuser@example.com",
-      password: "Password@123",
     });
   });
 
@@ -90,23 +53,37 @@ describe("Register", () => {
     );
 
     await user.type(
-      screen.getByRole("textbox", { name: /username/i }),
+      screen.getByRole("textbox", {
+        name: /username/i,
+      }),
       "newuser",
     );
 
     await user.type(
-      screen.getByRole("textbox", { name: /email/i }),
+      screen.getByRole("textbox", {
+        name: /email/i,
+      }),
       "newuser@example.com",
     );
 
     await user.type(screen.getByLabelText(/password/i), "Password@123");
 
-    await user.click(screen.getByRole("button", { name: /create account/i }));
+    await user.click(
+      screen.getByRole("button", {
+        name: /create account/i,
+      }),
+    );
 
     expect(
       await screen.findByText(
-        /registration failed. please check your details./i,
+        /registration failed\. please check your details\./i,
       ),
     ).toBeInTheDocument();
+
+    expect(register).toHaveBeenCalledWith({
+      username: "newuser",
+      email: "newuser@example.com",
+      password: "Password@123",
+    });
   });
 });

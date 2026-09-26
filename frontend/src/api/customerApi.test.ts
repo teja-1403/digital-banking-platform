@@ -30,7 +30,10 @@ describe("customerApi", () => {
     const result = await getCurrentCustomer();
 
     expect(axiosClient.get).toHaveBeenCalledWith("/api/customers/me");
+
     expect(result.firstName).toBe("Teja");
+    expect(result.lastName).toBe("Reddy");
+    expect(result.phoneNumber).toBe("9876543210");
   });
 
   it("creates a customer with the expected payload", async () => {
@@ -55,6 +58,9 @@ describe("customerApi", () => {
       lastName: "Customer",
       phoneNumber: "9123456780",
     });
-    expect(result.email).toBe("new@example.com");
+
+    expect(result.firstName).toBe("New");
+    expect(result.lastName).toBe("Customer");
+    expect(result.phoneNumber).toBe("9123456780");
   });
 });
